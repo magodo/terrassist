@@ -14,9 +14,9 @@ func TestExpand(t *testing.T) {
 		expect string
 	}{
 		{
-			dir:    "testdata",
-			pkg:    "foo",
-			typ:    "TypePrimaryCollection",
+			dir: "testdata",
+			pkg: "foo",
+			typ: "TypePrimaryCollection",
 			expect: `package main
 
 import foo "foo"
@@ -39,12 +39,11 @@ func expandTypePrimaryCollection(input []interface{}) foo.TypePrimaryCollection 
 	return output
 }
 `,
-
 		},
 		{
-			dir:    "testdata",
-			pkg:    "foo",
-			typ:    "TypePrimaryAliasCollection",
+			dir: "testdata",
+			pkg: "foo",
+			typ: "TypePrimaryAliasCollection",
 			expect: `package main
 
 import foo "foo"
@@ -71,7 +70,24 @@ func expandTypePrimaryAliasCollection(input []interface{}) foo.TypePrimaryAliasC
 	return output
 }
 `,
+		},
+		{
+			dir: "testdata",
+			pkg: "foo",
+			typ: "TypePrimaryPointerAliasCollection",
+			expect: `package main
 
+import foo "foo"
+
+func expandTypePrimaryPointerAliasCollection(input []interface{}) foo.TypePrimaryPointerAliasCollection {
+	if len(input == 0 || input[0] == nil) {
+		return foo.TypePrimaryPointerAliasCollection{}
+	}
+	b := input[0].(map[string]interface{})
+	output := foo.TypePrimaryPointerAliasCollection{PtrBool: PtrBool(utils.Bool(b["ptr_bool"].(bool)))}
+	return output
+}
+`,
 		},
 	}
 

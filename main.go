@@ -17,6 +17,7 @@ import (
 const usage = "terialize <pkg> <type>"
 
 const _idEncloseBlock = "b"
+const _idLocalVar = "e"
 
 func main() {
 	flag.Usage = func() {
@@ -61,82 +62,98 @@ func run(dir string, pkgName string, typeName string) *File {
 	typeObj := pkg.TypesInfo.Defs[targetIdent]
 
 	f := NewFile("main")
-	expandType(f, typeObj.Type(), false)
+	expandType(typeObj.Type(), nil, false, nil, expandSlot{f: f})
 	return f
 }
 
-var ptrUtils = map[string]*Statement{
-	"bool":    Id("utils").Dot("Bool"),
-	"int":     Id("utils").Dot("Int"),
-	"float64": Id("utils").Dot("Float64"),
-	"string":  Id("utils").Dot("String"),
+type Slot interface {
+	Add(code ...Code) *Statement
 }
 
-func expandType(f *File, t types.Type, ref bool) (cs expandCallSite, inline bool) {
+type expandSlot struct {
+	f      *File
+	define Slot
+	assign Slot
+}
+
+func expandType(t types.Type, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	switch t := t.(type) {
 	case *types.Basic:
-		return expandBasic(t, ref)
+		expandBasic(t, ref, input, slot)
 	case *types.Pointer:
-		return expandType(f, t.Elem(), true)
+		expandType(t.Elem(), varHint, true, input, slot)
 	case *types.Slice:
 		panic("TODO")
 	case *types.Map:
 		panic("TODO")
 	case *types.Named:
-		return expandNamedType(f, t, ref)
+		expandNamedType(t, varHint, ref, input, slot)
 	default:
 		// Ignore: Array, Chan, Tuple, Signature, Struct, Interface
-		return nil, false
+		return
 	}
 }
 
-func expandBasic(t *types.Basic, ref bool) (expandCallSite, bool) {
-	return func(input *Statement) func(*Statement) {
-		return func(s *Statement) {
-			cs := input.Assert(Id(t.Name()))
-			if ref {
-				cs = ptrUtils[t.Name()].Clone().Call(cs)
-			}
-			s.Add(cs)
-		}
-	}, true
+func expandBasic(t *types.Basic, ref bool, input *Statement, slot expandSlot) {
+	cs := input.Assert(Id(t.Name()))
+	if ref {
+		cs = ptrUtils[t.Name()].Clone().Call(cs)
+	}
+	slot.assign.Add(cs)
 }
 
-func expandNamedType(f *File, t *types.Named, ref bool) (expandCallSite, bool) {
+func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	switch t.Underlying().(type) {
 	case *types.Basic:
-		return expandNamedBasic(t, ref)
+		expandNamedBasic(t, varHint, ref, input, slot)
 	case *types.Pointer:
-		panic("TODO")
+		expandNamedPointer(t, varHint, ref, input, slot)
 	case *types.Slice:
 		panic("TODO")
 	case *types.Map:
 		panic("TODO")
 	case *types.Struct:
-		return expandNamedStruct(f, t, false)
+		expandNamedStruct(t, ref, slot)
 	case *types.Interface:
 		panic("TODO")
 	default:
 		// Array, Chan, Tuple, Signature
-		return nil, false
+		return
 	}
 }
 
-type expandCallSite func(input *Statement) func(s *Statement)
-
-func expandNamedBasic(t *types.Named, ref bool) (expandCallSite, bool) {
-	return func(input *Statement) func(*Statement) {
-		return func(s *Statement) {
-			s.Add(input.Assert(qualifiedNamedType(t)))
-		}
-	}, !ref
+func expandNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+	assignSlot := &Statement{}
+	newSlot := expandSlot{
+		f:      slot.f,
+		define: slot.define,
+		assign: assignSlot,
+	}
+	expandType(t.Underlying(), hint, true, input, newSlot)
+	slot.assign.Add(Id(t.Obj().Name()).Call(assignSlot))
 }
 
-func expandNamedStruct(f *File, t *types.Named, ref bool) (expandCallSite, bool) {
+func expandNamedBasic(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
+	cs := input.Assert(qualifiedNamedType(t))
+	if !ref {
+		slot.assign.Add(cs)
+		return
+	}
+
+	localVar := _idLocalVar
+	if varHint != nil {
+		localVar = *varHint
+	}
+	slot.define.Add(Id(localVar).Op(":=").Add(cs))
+
+	slot.assign.Add(Op("&").Id(localVar))
+}
+
+func expandNamedStruct(t *types.Named, ref bool, slot expandSlot) {
 	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
 
 	// Create an expand function for the given type
-	f.Func().Id(expandFuncName).Params(
+	slot.f.Func().Id(expandFuncName).Params(
 		Id("input").Index().Interface(),
 	).Do(func(stmt *Statement) {
 		if ref {
@@ -164,14 +181,18 @@ func expandNamedStruct(f *File, t *types.Named, ref bool) (expandCallSite, bool)
 			// b := input[0].(map[string]interface{})
 			g.Id(_idEncloseBlock).Op(":=").Id("input").Index(Lit(0)).Assert(Map(String()).Interface())
 
-			// Loop over the struct fields and get their "expandCallsite" callbacks and the location indicators.
-			type litCompCtx struct {
-				field  *types.Var
-				doFunc func(*Statement)
+			// Loop over the struct fields and get their "slots"
+			type slotCtx struct {
+				field    *types.Var
+				slot     expandSlot
+				input    *Statement
+				localVar string
 			}
 
-			var litCompCtxes []litCompCtx
+			var slotCtxList []slotCtx
 
+			var defineSlots []*Statement
+			var assignSlots []*Statement
 			ut := t.Underlying().(*types.Struct)
 			for i := 0; i < ut.NumFields(); i++ {
 				v := ut.Field(i)
@@ -179,25 +200,26 @@ func expandNamedStruct(f *File, t *types.Named, ref bool) (expandCallSite, bool)
 					continue
 				}
 
-				input := Id(_idEncloseBlock).Index(Lit(strcase.ToSnake(v.Name())))
-				cs, inline := expandType(f, v.Type(), false)
-
-				ctx := litCompCtx{
-					field:  v,
-					doFunc: cs(input.Clone()),
+				defineSlot := &Statement{}
+				assignSlot := &Statement{}
+				defineSlots = append(defineSlots, defineSlot)
+				assignSlots = append(assignSlots, assignSlot)
+				ctx := slotCtx{
+					field: v,
+					slot: expandSlot{
+						f:      slot.f,
+						define: defineSlot,
+						assign: assignSlot,
+					},
+					input:    Id(_idEncloseBlock).Index(Lit(strcase.ToSnake(v.Name()))),
+					localVar: strcase.ToLowerCamel(v.Name()),
 				}
-				if !inline {
-					localVar := Id(strcase.ToLowerCamel(v.Name()))
+				slotCtxList = append(slotCtxList, ctx)
+			}
 
-					// Add expand call site before constructing struct.
-					g.Add(localVar.Clone().Op(":=").Do(ctx.doFunc))
-
-					// Modify the context so that the field assignment uses the local variable that are expanded into prior.
-					ctx.doFunc = func(s *Statement) {
-						s.Op("&").Add(localVar)
-					}
-				}
-				litCompCtxes = append(litCompCtxes, ctx)
+			for i, ctx := range slotCtxList {
+				expandType(ctx.field.Type(), &ctx.localVar, false, ctx.input, ctx.slot)
+				g.Add(defineSlots[i])
 			}
 
 			g.Id("output").Op(":=").Do(func(stmt *Statement) {
@@ -205,19 +227,20 @@ func expandNamedStruct(f *File, t *types.Named, ref bool) (expandCallSite, bool)
 					stmt.Op("&")
 				}
 			}).Add(qualifiedNamedType(t)).Values(DictFunc(func(d Dict) {
-				for _, ctx := range litCompCtxes {
-					s := Statement{}
-					d[Id(ctx.field.Name())] = s.Do(ctx.doFunc)
+				for idx, ctx := range slotCtxList {
+					d[Id(ctx.field.Name())] = assignSlots[idx]
 				}
 			}))
 			g.Return(Id("output"))
 		})
 
-	return func(input *Statement) func(*Statement) {
-		return func(s *Statement) {
-			s.Id(expandFuncName).Call(input.Assert(Index().Interface()))
-		}
-	}, true
+}
+
+var ptrUtils = map[string]*Statement{
+	"bool":    Id("utils").Dot("Bool"),
+	"int":     Id("utils").Dot("Int"),
+	"float64": Id("utils").Dot("Float64"),
+	"string":  Id("utils").Dot("String"),
 }
 
 func qualifiedNamedType(t *types.Named) *Statement {

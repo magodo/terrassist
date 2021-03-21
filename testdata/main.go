@@ -76,19 +76,19 @@ type PtrFloat *float64
 
 type TypePrimaryPointerAliasCollection struct {
 	PtrBool  PtrBool
-	PtrInt   PtrInt
-	PtrStr   PtrStr
-	PtrFloat PtrFloat
+	//PtrInt   PtrInt
+	//PtrStr   PtrStr
+	//PtrFloat PtrFloat
 
-	SlicePtrBool  []PtrBool
-	SlicePtrInt   []PtrInt
-	SlicePtrStr   []PtrStr
-	SlicePtrFloat []PtrFloat
-
-	PtrSlicePtrBool  *[]PtrBool
-	PtrSlicePtrInt   *[]PtrInt
-	PtrSlicePtrStr   *[]PtrStr
-	PtrSlicePtrFloat *[]PtrFloat
+	//SlicePtrBool  []PtrBool
+	//SlicePtrInt   []PtrInt
+	//SlicePtrStr   []PtrStr
+	//SlicePtrFloat []PtrFloat
+	//
+	//PtrSlicePtrBool  *[]PtrBool
+	//PtrSlicePtrInt   *[]PtrInt
+	//PtrSlicePtrStr   *[]PtrStr
+	//PtrSlicePtrFloat *[]PtrFloat
 }
 
 func main() {}

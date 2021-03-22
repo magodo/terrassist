@@ -139,3 +139,11 @@ type TypeNamedStructSliceCollection struct {
 	S1PtrSlice    []*TypeS1
 	S1PtrSlicePtr *[]*TypeS1
 }
+
+type TypeIntSliceAlias []int
+
+type TypeIntPtrSliceAlias []*int
+
+type TypeNamedBoolSliceAlias []Bool
+
+type TypeNamedStructSliceAlias []TypeS1

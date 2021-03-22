@@ -81,6 +81,26 @@ func TestExpand(t *testing.T) {
 		{
 			typ: "TypeNamedStructSliceCollection",
 		},
+		// 16
+		{
+			typ: "TypeIntSliceAlias",
+		},
+		// 17
+		{
+			typ: "TypeIntPtrSliceAlias",
+		},
+		// 18
+		{
+			typ: "TypeNamedBoolSliceAlias",
+		},
+		// 19
+		{
+			typ: "TypeNamedBoolSliceAlias",
+		},
+		// 20
+		{
+			typ: "TypeNamedStructSliceAlias",
+		},
 	}
 
 	for idx, c := range cases {

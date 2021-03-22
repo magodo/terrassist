@@ -194,7 +194,63 @@ func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement
 }
 
 func expandNamedSlice(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
-	panic("TODO")
+	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
+	if ref {
+		expandFuncName += "Ptr"
+	}
+
+	// Fill in the assign slot of the invoker.
+	if slot.assign != nil {
+		slot.assign.Add(Id(expandFuncName).Call(input.Assert(Index().Interface())))
+	}
+
+	// Create an expand function for the given type
+	slot.f.Func().Id(expandFuncName).Params(
+		Id(_idInput).Index().Interface(),
+	).Do(func(stmt *Statement) {
+		if ref {
+			stmt.Op("*")
+		}
+	}).Add(qualifiedNamedType(t)).
+
+		// Function block
+		BlockFunc(func(g *Group) {
+			// Nil check on the input, e.g.:
+			//
+			// if len(input) == 0 {
+			//     return nil
+			// }
+			g.If(Len(Id(_idInput)).Op("==").Lit(0)).BlockFunc(func(g *Group) {
+				g.Return(Nil())
+			})
+
+			// Initialize the output array, e.g.
+			//
+			// output := make([]*int, 0)
+			g.Id(_idOutput).Op(":=").Make(qualifiedNamedType(t), Lit(0))
+
+			// Prepare the slots
+			assignSlot, defineSlot := &Statement{}, &Statement{}
+			newSlot := expandSlot{
+				f:      slot.f,
+				assign: assignSlot,
+				define: defineSlot,
+			}
+
+			localVar := _idLocalVar
+			expandType(t.Underlying().(*types.Slice).Elem(), &localVar, false, Id(_idSliceElem), newSlot)
+
+			g.For(List(Id("_"), Id(_idSliceElem)).Op(":=").Range().Id(_idInput)).Block(
+				defineSlot,
+				Id(_idOutput).Op("=").Append(Id(_idOutput), assignSlot),
+			)
+
+			g.Return(Do(func(stmt *Statement) {
+				if ref {
+					stmt.Op("&")
+				}
+			}).Id(_idOutput))
+		})
 }
 
 func expandNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {

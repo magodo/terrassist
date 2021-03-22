@@ -113,7 +113,7 @@ func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement
 	case *types.Map:
 		panic("TODO")
 	case *types.Struct:
-		expandNamedStruct(t, ref, slot)
+		expandNamedStruct(t, varHint, ref, input, slot)
 	case *types.Interface:
 		panic("TODO")
 	default:
@@ -149,8 +149,13 @@ func expandNamedBasic(t *types.Named, varHint *string, ref bool, input *Statemen
 	slot.assign.Add(Op("&").Id(localVar))
 }
 
-func expandNamedStruct(t *types.Named, ref bool, slot expandSlot) {
+func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
+
+	// Fill in the assign slot of the invoker.
+	if slot.assign != nil {
+		slot.assign.Add(Id(expandFuncName).Call(input.Assert(Index().Interface())))
+	}
 
 	// Create an expand function for the given type
 	slot.f.Func().Id(expandFuncName).Params(

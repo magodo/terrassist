@@ -1,4 +1,4 @@
-package main
+package foo
 
 type TypePrimaryCollection struct {
 	Bool  bool
@@ -75,7 +75,7 @@ type PtrStr *string
 type PtrFloat *float64
 
 type TypePrimaryPointerAliasCollection struct {
-	PtrBool  PtrBool
+	PtrBool PtrBool
 	//PtrInt   PtrInt
 	//PtrStr   PtrStr
 	//PtrFloat PtrFloat
@@ -89,6 +89,24 @@ type TypePrimaryPointerAliasCollection struct {
 	//PtrSlicePtrInt   *[]PtrInt
 	//PtrSlicePtrStr   *[]PtrStr
 	//PtrSlicePtrFloat *[]PtrFloat
+}
+
+type TypeFoo struct {
+	I int
+}
+
+type TypeBar struct {
+	S string
+}
+
+type TypeNamedStructCollection struct {
+	Foo TypeFoo
+	Bar TypeBar
+}
+
+type TypeNamedStructPointerCollection struct {
+	Foo *TypeFoo
+	Bar *TypeBar
 }
 
 func main() {}

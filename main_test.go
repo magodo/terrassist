@@ -89,6 +89,80 @@ func expandTypePrimaryPointerAliasCollection(input []interface{}) foo.TypePrimar
 }
 `,
 		},
+		{
+			dir: "testdata",
+			pkg: "foo",
+			typ: "TypeNamedStructCollection",
+			expect: `package main
+
+import foo "foo"
+
+func expandTypeNamedStructCollection(input []interface{}) foo.TypeNamedStructCollection {
+	if len(input == 0 || input[0] == nil) {
+		return foo.TypeNamedStructCollection{}
+	}
+	b := input[0].(map[string]interface{})
+	output := foo.TypeNamedStructCollection{
+		Bar: expandTypeBar(b["bar"].([]interface{})),
+		Foo: expandTypeFoo(b["foo"].([]interface{})),
+	}
+	return output
+}
+func expandTypeFoo(input []interface{}) foo.TypeFoo {
+	if len(input == 0 || input[0] == nil) {
+		return foo.TypeFoo{}
+	}
+	b := input[0].(map[string]interface{})
+	output := foo.TypeFoo{I: b["i"].(int)}
+	return output
+}
+func expandTypeBar(input []interface{}) foo.TypeBar {
+	if len(input == 0 || input[0] == nil) {
+		return foo.TypeBar{}
+	}
+	b := input[0].(map[string]interface{})
+	output := foo.TypeBar{S: b["s"].(string)}
+	return output
+}
+`,
+		},
+		{
+			dir: "testdata",
+			pkg: "foo",
+			typ: "TypeNamedStructPointerCollection",
+			expect: `package main
+
+import foo "foo"
+
+func expandTypeNamedStructPointerCollection(input []interface{}) foo.TypeNamedStructPointerCollection {
+	if len(input == 0 || input[0] == nil) {
+		return foo.TypeNamedStructPointerCollection{}
+	}
+	b := input[0].(map[string]interface{})
+	output := foo.TypeNamedStructPointerCollection{
+		Bar: expandTypeBar(b["bar"].([]interface{})),
+		Foo: expandTypeFoo(b["foo"].([]interface{})),
+	}
+	return output
+}
+func expandTypeFoo(input []interface{}) *foo.TypeFoo {
+	if len(input == 0 || input[0] == nil) {
+		return nil
+	}
+	b := input[0].(map[string]interface{})
+	output := &foo.TypeFoo{I: b["i"].(int)}
+	return output
+}
+func expandTypeBar(input []interface{}) *foo.TypeBar {
+	if len(input == 0 || input[0] == nil) {
+		return nil
+	}
+	b := input[0].(map[string]interface{})
+	output := &foo.TypeBar{S: b["s"].(string)}
+	return output
+}
+`,
+		},
 	}
 
 	for idx, c := range cases {

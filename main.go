@@ -180,7 +180,7 @@ func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement
 	case *types.Pointer:
 		expandNamedPointer(t, varHint, ref, input, slot)
 	case *types.Slice:
-		panic("TODO")
+		expandNamedSlice(t, varHint, ref, input, slot)
 	case *types.Map:
 		panic("TODO")
 	case *types.Struct:
@@ -191,6 +191,10 @@ func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement
 		// Array, Chan, Tuple, Signature
 		return
 	}
+}
+
+func expandNamedSlice(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+	panic("TODO")
 }
 
 func expandNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
@@ -247,7 +251,7 @@ func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Stateme
 			// if len(input == 0 || input[0] == nil) {
 			//     return foo.TypeFoo{}
 			// }
-			g.If(Len(Id(_idInput).Op("==").Lit(0).Op("||").Id(_idInput).Index(Lit(0)).Op("==").Nil())).BlockFunc(func(g *Group) {
+			g.If(Len(Id(_idInput)).Op("==").Lit(0).Op("||").Id(_idInput).Index(Lit(0)).Op("==").Nil()).BlockFunc(func(g *Group) {
 				if ref {
 					g.Return(Nil())
 				} else {
@@ -315,11 +319,12 @@ func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Stateme
 
 }
 
+// TODO: make this configurable
 var ptrUtils = map[string]*Statement{
-	"bool":    Id("utils").Dot("Bool"),
-	"int":     Id("utils").Dot("Int"),
-	"float64": Id("utils").Dot("Float64"),
-	"string":  Id("utils").Dot("String"),
+	"bool":    Qual("types/utils", "Bool"),
+	"int":     Qual("types/utils", "Int"),
+	"float64": Qual("types/utils", "Float64"),
+	"string":  Qual("types/utils", "String"),
 }
 
 func qualifiedNamedType(t *types.Named) *Statement {

@@ -12,3 +12,10 @@ func expandTypeNamedBoolSliceAlias(input []interface{}) types.TypeNamedBoolSlice
 	}
 	return output
 }
+func flattenTypeNamedBoolSliceAliasSlice(input types.TypeNamedBoolSliceAlias) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, bool(elem))
+	}
+	return output
+}

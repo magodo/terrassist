@@ -15,3 +15,11 @@ func expandTypePrimaryCollection(input []interface{}) types.TypePrimaryCollectio
 	}
 	return output
 }
+func flattenTypePrimaryCollection(input types.TypePrimaryCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"bool":  input.Bool,
+		"float": input.Float,
+		"int":   input.Int,
+		"str":   input.Str,
+	}}
+}

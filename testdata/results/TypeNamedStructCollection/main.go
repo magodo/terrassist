@@ -29,3 +29,15 @@ func expandTypeS2(input []interface{}) types.TypeS2 {
 	output := types.TypeS2{S: b["s"].(string)}
 	return output
 }
+func flattenTypeNamedStructCollection(input types.TypeNamedStructCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"s_1": flattenTypeS1(input.S1),
+		"s_2": flattenTypeS2(input.S2),
+	}}
+}
+func flattenTypeS1(input types.TypeS1) []interface{} {
+	return []interface{}{map[string]interface{}{"i": input.I}}
+}
+func flattenTypeS2(input types.TypeS2) []interface{} {
+	return []interface{}{map[string]interface{}{"s": input.S}}
+}

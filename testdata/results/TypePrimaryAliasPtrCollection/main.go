@@ -19,3 +19,27 @@ func expandTypePrimaryAliasPtrCollection(input []interface{}) types.TypePrimaryA
 	}
 	return output
 }
+func flattenTypePrimaryAliasPtrCollection(input types.TypePrimaryAliasPtrCollection) []interface{} {
+	ptrBool := false
+	if input.PtrBool != nil {
+		ptrBool = bool(*input.PtrBool)
+	}
+	ptrInt := 0
+	if input.PtrInt != nil {
+		ptrInt = int(*input.PtrInt)
+	}
+	ptrStr := ""
+	if input.PtrStr != nil {
+		ptrStr = string(*input.PtrStr)
+	}
+	ptrFloat := 0.0
+	if input.PtrFloat != nil {
+		ptrFloat = float64(*input.PtrFloat)
+	}
+	return []interface{}{map[string]interface{}{
+		"ptr_bool":  ptrBool,
+		"ptr_float": ptrFloat,
+		"ptr_int":   ptrInt,
+		"ptr_str":   ptrStr,
+	}}
+}

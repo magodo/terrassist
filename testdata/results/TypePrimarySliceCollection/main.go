@@ -55,3 +55,39 @@ func expandFloat64Slice(input []interface{}) []float64 {
 	}
 	return output
 }
+func flattenTypePrimarySliceCollection(input types.TypePrimarySliceCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"bool_slice":  flattenBoolSlice(input.BoolSlice),
+		"float_slice": flattenFloat64Slice(input.FloatSlice),
+		"int_slice":   flattenIntSlice(input.IntSlice),
+		"str_slice":   flattenStringSlice(input.StrSlice),
+	}}
+}
+func flattenBoolSlice(input []bool) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, elem)
+	}
+	return output
+}
+func flattenIntSlice(input []int) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, elem)
+	}
+	return output
+}
+func flattenStringSlice(input []string) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, elem)
+	}
+	return output
+}
+func flattenFloat64Slice(input []float64) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, elem)
+	}
+	return output
+}

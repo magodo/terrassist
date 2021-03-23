@@ -15,3 +15,14 @@ func expandTypeIntPtrSliceAlias(input []interface{}) types.TypeIntPtrSliceAlias 
 	}
 	return output
 }
+func flattenTypeIntPtrSliceAliasSlice(input types.TypeIntPtrSliceAlias) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		e := 0
+		if elem != nil {
+			e = *elem
+		}
+		output = append(output, e)
+	}
+	return output
+}

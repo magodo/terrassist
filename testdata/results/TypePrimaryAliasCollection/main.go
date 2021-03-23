@@ -15,3 +15,11 @@ func expandTypePrimaryAliasCollection(input []interface{}) types.TypePrimaryAlia
 	}
 	return output
 }
+func flattenTypePrimaryAliasCollection(input types.TypePrimaryAliasCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"bool":  bool(input.Bool),
+		"float": float64(input.Float),
+		"int":   int(input.Int),
+		"str":   string(input.Str),
+	}}
+}

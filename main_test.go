@@ -35,18 +35,18 @@ func TestExpand(t *testing.T) {
 		{
 			typ: "TypePrimaryPtrSlicePtrCollection",
 		},
-		{
-			typ: "TypePrimaryMapCollection",
-		},
-		{
-			typ: "TypePrimaryPtrMapCollection",
-		},
-		{
-			typ: "TypePrimaryMapPtrCollection",
-		},
-		{
-			typ: "TypePrimaryPtrMapPtrCollection",
-		},
+		//{
+		//	typ: "TypePrimaryMapCollection",
+		//},
+		//{
+		//	typ: "TypePrimaryPtrMapCollection",
+		//},
+		//{
+		//	typ: "TypePrimaryMapPtrCollection",
+		//},
+		//{
+		//	typ: "TypePrimaryPtrMapPtrCollection",
+		//},
 		{
 			typ: "TypePrimaryAliasCollection",
 		},
@@ -65,18 +65,18 @@ func TestExpand(t *testing.T) {
 		{
 			typ: "TypePrimaryAliasPtrSlicePtrCollection",
 		},
-		{
-			typ: "TypePrimaryAliasMapCollection",
-		},
-		{
-			typ: "TypePrimaryAliasPtrMapCollection",
-		},
-		{
-			typ: "TypePrimaryAliasMapPtrCollection",
-		},
-		{
-			typ: "TypePrimaryAliasPtrMapPtrCollection",
-		},
+		//{
+		//	typ: "TypePrimaryAliasMapCollection",
+		//},
+		//{
+		//	typ: "TypePrimaryAliasPtrMapCollection",
+		//},
+		//{
+		//	typ: "TypePrimaryAliasMapPtrCollection",
+		//},
+		//{
+		//	typ: "TypePrimaryAliasPtrMapPtrCollection",
+		//},
 		{
 			typ: "TypePrimaryPtrAliasCollection",
 		},
@@ -86,12 +86,12 @@ func TestExpand(t *testing.T) {
 		{
 			typ: "TypePrimaryPtrAliasSlicePtrCollection",
 		},
-		{
-			typ: "TypePrimaryPtrAliasMapCollection",
-		},
-		{
-			typ: "TypePrimaryPtrAliasMapPtrCollection",
-		},
+		//{
+		//	typ: "TypePrimaryPtrAliasMapCollection",
+		//},
+		//{
+		//	typ: "TypePrimaryPtrAliasMapPtrCollection",
+		//},
 		{
 			typ: "TypeNamedStructCollection",
 		},
@@ -101,9 +101,9 @@ func TestExpand(t *testing.T) {
 		{
 			typ: "TypeNamedStructSliceCollection",
 		},
-		{
-			typ: "TypeNamedStructMapCollection",
-		},
+		//{
+		//	typ: "TypeNamedStructMapCollection",
+		//},
 		{
 			typ: "TypeIntSliceAlias",
 		},
@@ -116,18 +116,18 @@ func TestExpand(t *testing.T) {
 		{
 			typ: "TypeNamedStructSliceAlias",
 		},
-		{
-			typ: "TypeIntMapAlias",
-		},
-		{
-			typ: "TypeIntPtrMapAlias",
-		},
-		{
-			typ: "TypeNamedBoolMapAlias",
-		},
-		{
-			typ: "TypeNamedStructMapAlias",
-		},
+		//{
+		//	typ: "TypeIntMapAlias",
+		//},
+		//{
+		//	typ: "TypeIntPtrMapAlias",
+		//},
+		//{
+		//	typ: "TypeNamedBoolMapAlias",
+		//},
+		//{
+		//	typ: "TypeNamedStructMapAlias",
+		//},
 		{
 			typ: "TypeNamedStructSliceAlias",
 		},

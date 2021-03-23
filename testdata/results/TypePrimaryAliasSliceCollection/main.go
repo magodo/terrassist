@@ -55,3 +55,39 @@ func expandFloatSlice(input []interface{}) []types.Float {
 	}
 	return output
 }
+func flattenTypePrimaryAliasSliceCollection(input types.TypePrimaryAliasSliceCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"bool_slice":  flattenBoolSlice(input.BoolSlice),
+		"float_slice": flattenFloatSlice(input.FloatSlice),
+		"int_slice":   flattenIntSlice(input.IntSlice),
+		"str_slice":   flattenStrSlice(input.StrSlice),
+	}}
+}
+func flattenBoolSlice(input []types.Bool) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, bool(elem))
+	}
+	return output
+}
+func flattenIntSlice(input []types.Int) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, int(elem))
+	}
+	return output
+}
+func flattenStrSlice(input []types.Str) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, string(elem))
+	}
+	return output
+}
+func flattenFloatSlice(input []types.Float) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, float64(elem))
+	}
+	return output
+}

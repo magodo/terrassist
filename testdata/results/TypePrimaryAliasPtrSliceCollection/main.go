@@ -59,3 +59,55 @@ func expandFloatPtrSlice(input []interface{}) []*types.Float {
 	}
 	return output
 }
+func flattenTypePrimaryAliasPtrSliceCollection(input types.TypePrimaryAliasPtrSliceCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"bool_ptr_slice":   flattenBoolPtrSlice(input.BoolPtrSlice),
+		"float_ptr_slice":  flattenFloatPtrSlice(input.FloatPtrSlice),
+		"int_ptr_slice":    flattenIntPtrSlice(input.IntPtrSlice),
+		"string_ptr_slice": flattenStrPtrSlice(input.StringPtrSlice),
+	}}
+}
+func flattenBoolPtrSlice(input []*types.Bool) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		e := false
+		if elem != nil {
+			e = bool(*elem)
+		}
+		output = append(output, e)
+	}
+	return output
+}
+func flattenIntPtrSlice(input []*types.Int) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		e := 0
+		if elem != nil {
+			e = int(*elem)
+		}
+		output = append(output, e)
+	}
+	return output
+}
+func flattenStrPtrSlice(input []*types.Str) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		e := ""
+		if elem != nil {
+			e = string(*elem)
+		}
+		output = append(output, e)
+	}
+	return output
+}
+func flattenFloatPtrSlice(input []*types.Float) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		e := 0.0
+		if elem != nil {
+			e = float64(*elem)
+		}
+		output = append(output, e)
+	}
+	return output
+}

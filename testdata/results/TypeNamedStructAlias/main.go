@@ -10,3 +10,6 @@ func expandTypeNamedStructAlias(input []interface{}) types.TypeNamedStructAlias 
 	output := types.TypeNamedStructAlias{I: b["i"].(int)}
 	return output
 }
+func flattenTypeNamedStructAlias(input types.TypeNamedStructAlias) []interface{} {
+	return []interface{}{map[string]interface{}{"i": input.I}}
+}

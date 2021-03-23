@@ -12,3 +12,10 @@ func expandTypeIntSliceAlias(input []interface{}) types.TypeIntSliceAlias {
 	}
 	return output
 }
+func flattenTypeIntSliceAliasSlice(input types.TypeIntSliceAlias) []interface{} {
+	output := make([]interface{}, 0)
+	for _, elem := range input {
+		output = append(output, elem)
+	}
+	return output
+}

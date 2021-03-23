@@ -29,3 +29,21 @@ func expandTypeS2Ptr(input []interface{}) *types.TypeS2 {
 	output := &types.TypeS2{S: b["s"].(string)}
 	return output
 }
+func flattenTypeNamedStructPointerCollection(input types.TypeNamedStructPointerCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"s_1": flattenTypeS1Ptr(input.S1),
+		"s_2": flattenTypeS2Ptr(input.S2),
+	}}
+}
+func flattenTypeS1Ptr(input *types.TypeS1) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+	return []interface{}{map[string]interface{}{"i": input.I}}
+}
+func flattenTypeS2Ptr(input *types.TypeS2) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+	return []interface{}{map[string]interface{}{"s": input.S}}
+}

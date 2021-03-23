@@ -58,3 +58,67 @@ func expandFloatPtrSlicePtr(input []interface{}) *[]types.FloatPtr {
 	}
 	return &output
 }
+func flattenTypePrimaryPtrAliasSlicePtrCollection(input types.TypePrimaryPtrAliasSlicePtrCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"bool_ptr_slice_ptr": flattenBoolPtrSlicePtr(input.BoolPtrSlicePtr),
+		"flat_ptr_slice_ptr": flattenFloatPtrSlicePtr(input.FlatPtrSlicePtr),
+		"int_ptr_slice_ptr":  flattenIntPtrSlicePtr(input.IntPtrSlicePtr),
+		"str_ptr_slice_ptr":  flattenStrPtrSlicePtr(input.StrPtrSlicePtr),
+	}}
+}
+func flattenBoolPtrSlicePtr(input *[]types.BoolPtr) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+	output := make([]interface{}, 0)
+	for _, elem := range *input {
+		e := false
+		if elem != nil {
+			e = *elem
+		}
+		output = append(output, e)
+	}
+	return output
+}
+func flattenIntPtrSlicePtr(input *[]types.IntPtr) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+	output := make([]interface{}, 0)
+	for _, elem := range *input {
+		e := 0
+		if elem != nil {
+			e = *elem
+		}
+		output = append(output, e)
+	}
+	return output
+}
+func flattenStrPtrSlicePtr(input *[]types.StrPtr) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+	output := make([]interface{}, 0)
+	for _, elem := range *input {
+		e := ""
+		if elem != nil {
+			e = *elem
+		}
+		output = append(output, e)
+	}
+	return output
+}
+func flattenFloatPtrSlicePtr(input *[]types.FloatPtr) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+	output := make([]interface{}, 0)
+	for _, elem := range *input {
+		e := 0.0
+		if elem != nil {
+			e = *elem
+		}
+		output = append(output, e)
+	}
+	return output
+}

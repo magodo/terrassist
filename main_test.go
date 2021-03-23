@@ -17,107 +17,120 @@ func TestExpand(t *testing.T) {
 	cases := []struct {
 		typ string
 	}{
-		// 0
 		{
 			typ: "TypePrimaryCollection",
 		},
-		// 1
 		{
 			typ: "TypePrimaryPtrCollection",
 		},
-		// 2
 		{
 			typ: "TypePrimarySliceCollection",
 		},
-		// 3
 		{
 			typ: "TypePrimaryPtrSliceCollection",
 		},
-		// 4
+		{
+			typ: "TypePrimarySlicePtrCollection",
+		},
 		{
 			typ: "TypePrimaryPtrSlicePtrCollection",
 		},
-		// 5
+		{
+			typ: "TypePrimaryMapCollection",
+		},
+		{
+			typ: "TypePrimaryPtrMapCollection",
+		},
+		{
+			typ: "TypePrimaryMapPtrCollection",
+		},
+		{
+			typ: "TypePrimaryPtrMapPtrCollection",
+		},
 		{
 			typ: "TypePrimaryAliasCollection",
 		},
-		// 6
 		{
 			typ: "TypePrimaryAliasPtrCollection",
 		},
-		// 7
 		{
 			typ: "TypePrimaryAliasSliceCollection",
 		},
-		// 8
 		{
 			typ: "TypePrimaryAliasPtrSliceCollection",
 		},
-		// 9
+		{
+			typ: "TypePrimaryAliasSlicePtrCollection",
+		},
 		{
 			typ: "TypePrimaryAliasPtrSlicePtrCollection",
 		},
-		// 10
+		{
+			typ: "TypePrimaryAliasMapCollection",
+		},
+		{
+			typ: "TypePrimaryAliasPtrMapCollection",
+		},
+		{
+			typ: "TypePrimaryAliasMapPtrCollection",
+		},
+		{
+			typ: "TypePrimaryAliasPtrMapPtrCollection",
+		},
 		{
 			typ: "TypePrimaryPtrAliasCollection",
 		},
-		// 11
 		{
 			typ: "TypePrimaryPtrAliasSliceCollection",
 		},
-		// 12
 		{
 			typ: "TypePrimaryPtrAliasSlicePtrCollection",
 		},
-		// 13
+		{
+			typ: "TypePrimaryPtrAliasMapCollection",
+		},
+		{
+			typ: "TypePrimaryPtrAliasMapPtrCollection",
+		},
 		{
 			typ: "TypeNamedStructCollection",
 		},
-		// 14
 		{
 			typ: "TypeNamedStructPointerCollection",
 		},
-		// 15
 		{
 			typ: "TypeNamedStructSliceCollection",
 		},
-		// 16
 		{
 			typ: "TypeIntSliceAlias",
 		},
-		// 17
 		{
 			typ: "TypeIntPtrSliceAlias",
 		},
-		// 18
 		{
 			typ: "TypeNamedBoolSliceAlias",
 		},
-		// 19
 		{
 			typ: "TypeNamedBoolSliceAlias",
 		},
-		// 20
 		{
 			typ: "TypeNamedStructSliceAlias",
 		},
-		// 21
 		{
 			typ: "TypeNamedStructAlias",
 		},
-		// 22
 		{
 			typ: "TypeNamedStructPtrAlias",
 		},
 	}
 
-	for idx, c := range cases {
+	for _, c := range cases {
 		buf := bytes.NewBufferString("")
 		f := run(typesDir, "types", c.typ)
-		require.NoError(t, f.Render(buf), idx)
+		require.NoError(t, f.Render(buf), c.typ)
 
 		expectFile := filepath.Join(resultBaseDir, c.typ, "main.go")
 		expectByte, _ := os.ReadFile(expectFile)
-		require.Equal(t, string(expectByte), buf.String(), idx)
+		require.Equal(t, string(expectByte), buf.String(), c.typ)
 	}
 }

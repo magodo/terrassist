@@ -29,10 +29,10 @@ type TypePrimaryPtrSliceCollection struct {
 }
 
 type TypePrimarySlicePtrCollection struct {
-	BoolPtrSlicePtr  *[]*bool
-	IntPtrSlicePtr   *[]*int
-	StrPtrSlicePtr   *[]*string
-	FloatPtrSlicePtr *[]*float64
+	BoolSlicePtr  *[]bool
+	IntSlicePtr   *[]int
+	StrSlicePtr   *[]string
+	FloatSlicePtr *[]float64
 }
 
 type TypePrimaryPtrSlicePtrCollection struct {
@@ -40,6 +40,34 @@ type TypePrimaryPtrSlicePtrCollection struct {
 	PtrInt   *[]*int
 	PtrStr   *[]*string
 	PtrFloat *[]*float64
+}
+
+type TypePrimaryMapCollection struct {
+	BoolMap  map[string]bool
+	IntMap   map[string]int
+	StrMap   map[string]string
+	FloatMap map[string]float64
+}
+
+type TypePrimaryPtrMapCollection struct {
+	BoolPtrMap  map[string]*bool
+	IntPtrMap   map[string]*int
+	StrPtrMap   map[string]*string
+	FloatPtrMap map[string]*float64
+}
+
+type TypePrimaryMapPtrCollection struct {
+	BoolMapPtr  *map[string]bool
+	IntMapPtr   *map[string]int
+	StrMapPtr   *map[string]string
+	FloatMapPtr *map[string]float64
+}
+
+type TypePrimaryPtrMapPtrCollection struct {
+	BoolPtrMapPtr  *map[string]*bool
+	IntPtrMapPtr   *map[string]*int
+	StrPtrMapPtr   *map[string]*string
+	FloatPtrMapPtr *map[string]*float64
 }
 
 type Bool bool
@@ -89,6 +117,34 @@ type TypePrimaryAliasPtrSlicePtrCollection struct {
 	FloatPtrSlicePtr  *[]*Float
 }
 
+type TypePrimaryAliasMapCollection struct {
+	BoolMap  map[string]Bool
+	IntMap   map[string]Int
+	StrMap   map[string]Str
+	FloatMap map[string]Float
+}
+
+type TypePrimaryAliasPtrMapCollection struct {
+	BoolPtrMap   map[string]*Bool
+	IntPtrMap    map[string]*Int
+	StringPtrMap map[string]*Str
+	FloatPtrMap  map[string]*Float
+}
+
+type TypePrimaryAliasMapPtrCollection struct {
+	BoolMapPtr   *map[string]Bool
+	IntMapPtr    *map[string]Int
+	StringMapPtr *map[string]Str
+	FloatMapPtr  *map[string]Float
+}
+
+type TypePrimaryAliasPtrMapPtrCollection struct {
+	BoolPtrMapPtr   *map[string]*Bool
+	IntPtrMapPtr    *map[string]*Int
+	StringPtrMapPtr *map[string]*Str
+	FloatPtrMapPtr  *map[string]*Float
+}
+
 type BoolPtr *bool
 type IntPtr *int
 type StrPtr *string
@@ -113,6 +169,20 @@ type TypePrimaryPtrAliasSlicePtrCollection struct {
 	IntPtrSlicePtr  *[]IntPtr
 	StrPtrSlicePtr  *[]StrPtr
 	FlatPtrSlicePtr *[]FloatPtr
+}
+
+type TypePrimaryPtrAliasMapCollection struct {
+	BoolPtrMap  map[string]BoolPtr
+	IntPtrMap   map[string]IntPtr
+	StrPtrMap   map[string]StrPtr
+	FloatPtrMap map[string]FloatPtr
+}
+
+type TypePrimaryPtrAliasMapPtrCollection struct {
+	BoolPtrMapPtr *map[string]BoolPtr
+	IntPtrMapPtr  *map[string]IntPtr
+	StrPtrMapPtr  *map[string]StrPtr
+	FlatPtrMapPtr *map[string]FloatPtr
 }
 
 type TypeS1 struct {

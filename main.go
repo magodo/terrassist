@@ -69,7 +69,7 @@ func (ctx *Ctx) run(dir string, pkgName string, typeName string) *File {
 
 	typeObj := pkg.TypesInfo.Defs[targetIdent]
 
-	f := NewFile("main")
+	f := NewFile("output")
 	ctx.expandType(typeObj.Type(), nil, false, nil, expandSlot{f: f})
 	return f
 }
@@ -165,7 +165,7 @@ func (ctx *Ctx) expandNamedPointer(t *types.Named, hint *string, ref bool, input
 		assign: assignSlot,
 	}
 	ctx.expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, input, newSlot)
-	slot.assign.Add(Id(t.Obj().Name()).Call(assignSlot))
+	slot.assign.Add(qualifiedNamedType(t).Call(assignSlot))
 }
 
 func (ctx *Ctx) expandSlice(t *types.Slice, varHint *string, ref bool, input *Statement, slot expandSlot) {

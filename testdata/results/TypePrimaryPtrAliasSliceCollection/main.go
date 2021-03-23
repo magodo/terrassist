@@ -1,4 +1,4 @@
-package main
+package output
 
 import (
 	types "types"
@@ -24,7 +24,7 @@ func expandBoolPtrSlice(input []interface{}) []types.BoolPtr {
 	}
 	output := make([]types.BoolPtr, 0)
 	for _, elem := range input {
-		output = append(output, BoolPtr(utils.Bool(elem.(bool))))
+		output = append(output, types.BoolPtr(utils.Bool(elem.(bool))))
 	}
 	return output
 }
@@ -34,7 +34,7 @@ func expandIntPtrSlice(input []interface{}) []types.IntPtr {
 	}
 	output := make([]types.IntPtr, 0)
 	for _, elem := range input {
-		output = append(output, IntPtr(utils.Int(elem.(int))))
+		output = append(output, types.IntPtr(utils.Int(elem.(int))))
 	}
 	return output
 }
@@ -44,7 +44,7 @@ func expandStrPtrSlice(input []interface{}) []types.StrPtr {
 	}
 	output := make([]types.StrPtr, 0)
 	for _, elem := range input {
-		output = append(output, StrPtr(utils.String(elem.(string))))
+		output = append(output, types.StrPtr(utils.String(elem.(string))))
 	}
 	return output
 }
@@ -54,7 +54,7 @@ func expandFloatPtrSlice(input []interface{}) []types.FloatPtr {
 	}
 	output := make([]types.FloatPtr, 0)
 	for _, elem := range input {
-		output = append(output, FloatPtr(utils.Float64(elem.(float64))))
+		output = append(output, types.FloatPtr(utils.Float64(elem.(float64))))
 	}
 	return output
 }

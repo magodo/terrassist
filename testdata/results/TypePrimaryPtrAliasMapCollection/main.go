@@ -1,4 +1,4 @@
-package main
+package output
 
 import (
 	types "types"
@@ -21,28 +21,28 @@ func expandTypePrimaryPtrAliasMapCollection(input []interface{}) types.TypePrima
 func expandBoolPtrMap(input map[string]interface{}) map[string]types.BoolPtr {
 	output := make(map[string]types.BoolPtr)
 	for k, v := range input {
-		output[k] = BoolPtr(utils.Bool(v.(bool)))
+		output[k] = types.BoolPtr(utils.Bool(v.(bool)))
 	}
 	return output
 }
 func expandIntPtrMap(input map[string]interface{}) map[string]types.IntPtr {
 	output := make(map[string]types.IntPtr)
 	for k, v := range input {
-		output[k] = IntPtr(utils.Int(v.(int)))
+		output[k] = types.IntPtr(utils.Int(v.(int)))
 	}
 	return output
 }
 func expandStrPtrMap(input map[string]interface{}) map[string]types.StrPtr {
 	output := make(map[string]types.StrPtr)
 	for k, v := range input {
-		output[k] = StrPtr(utils.String(v.(string)))
+		output[k] = types.StrPtr(utils.String(v.(string)))
 	}
 	return output
 }
 func expandFloatPtrMap(input map[string]interface{}) map[string]types.FloatPtr {
 	output := make(map[string]types.FloatPtr)
 	for k, v := range input {
-		output[k] = FloatPtr(utils.Float64(v.(float64)))
+		output[k] = types.FloatPtr(utils.Float64(v.(float64)))
 	}
 	return output
 }

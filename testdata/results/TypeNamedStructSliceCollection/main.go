@@ -43,14 +43,6 @@ func expandTypeS1SlicePtr(input []interface{}) *[]types.TypeS1 {
 	}
 	return &output
 }
-func expandTypeS1(input []interface{}) types.TypeS1 {
-	if len(input) == 0 || input[0] == nil {
-		return types.TypeS1{}
-	}
-	b := input[0].(map[string]interface{})
-	output := types.TypeS1{I: b["i"].(int)}
-	return output
-}
 func expandTypeS1PtrSlice(input []interface{}) []*types.TypeS1 {
 	if len(input) == 0 {
 		return nil
@@ -78,12 +70,4 @@ func expandTypeS1PtrSlicePtr(input []interface{}) *[]*types.TypeS1 {
 		output = append(output, expandTypeS1Ptr(elem.([]interface{})))
 	}
 	return &output
-}
-func expandTypeS1Ptr(input []interface{}) *types.TypeS1 {
-	if len(input) == 0 || input[0] == nil {
-		return nil
-	}
-	b := input[0].(map[string]interface{})
-	output := &types.TypeS1{I: b["i"].(int)}
-	return output
 }

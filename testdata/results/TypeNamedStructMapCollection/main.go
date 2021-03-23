@@ -37,14 +37,6 @@ func expandTypeS1MapPtr(input map[string]interface{}) *map[string]types.TypeS1 {
 	}
 	return &output
 }
-func expandTypeS1(input []interface{}) types.TypeS1 {
-	if len(input) == 0 || input[0] == nil {
-		return types.TypeS1{}
-	}
-	b := input[0].(map[string]interface{})
-	output := types.TypeS1{I: b["i"].(int)}
-	return output
-}
 func expandTypeS1PtrMap(input map[string]interface{}) map[string]*types.TypeS1 {
 	output := make(map[string]*types.TypeS1)
 	for k, v := range input {
@@ -66,12 +58,4 @@ func expandTypeS1PtrMapPtr(input map[string]interface{}) *map[string]*types.Type
 		output[k] = expandTypeS1Ptr(v.([]interface{}))
 	}
 	return &output
-}
-func expandTypeS1Ptr(input []interface{}) *types.TypeS1 {
-	if len(input) == 0 || input[0] == nil {
-		return nil
-	}
-	b := input[0].(map[string]interface{})
-	output := &types.TypeS1{I: b["i"].(int)}
-	return output
 }

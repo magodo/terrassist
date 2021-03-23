@@ -141,7 +141,8 @@ func TestExpand(t *testing.T) {
 
 	for _, c := range cases {
 		buf := bytes.NewBufferString("")
-		f := run(typesDir, "types", c.typ)
+		ctx := Ctx{existFuncs: map[string]bool{}}
+		f := ctx.run(typesDir, "types", c.typ)
 		require.NoError(t, f.Render(buf), c.typ)
 
 		expectFile := filepath.Join(resultBaseDir, c.typ, "main.go")

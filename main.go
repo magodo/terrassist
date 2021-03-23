@@ -36,14 +36,19 @@ func main() {
 
 	pkgName, typeName := flag.Args()[0], flag.Args()[1]
 
-	f := run(".", pkgName, typeName)
+	ctx := Ctx{existFuncs: map[string]bool{}}
+	f := ctx.run(".", pkgName, typeName)
 
 	if err := f.Render(os.Stdout); err != nil {
 		log.Fatalf("failed to render: %v", err)
 	}
 }
 
-func run(dir string, pkgName string, typeName string) *File {
+type Ctx struct {
+	existFuncs map[string]bool
+}
+
+func (ctx *Ctx) run(dir string, pkgName string, typeName string) *File {
 	pkgs, err := decorator.Load(&packages.Config{Dir: dir, Mode: packages.LoadSyntax}, pkgName)
 	if err != nil {
 		log.Fatal(err)
@@ -65,7 +70,7 @@ func run(dir string, pkgName string, typeName string) *File {
 	typeObj := pkg.TypesInfo.Defs[targetIdent]
 
 	f := NewFile("main")
-	expandType(typeObj.Type(), nil, false, nil, expandSlot{f: f})
+	ctx.expandType(typeObj.Type(), nil, false, nil, expandSlot{f: f})
 	return f
 }
 
@@ -79,42 +84,42 @@ type expandSlot struct {
 	assign Slot
 }
 
-func expandType(t types.Type, varHint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandType(t types.Type, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	switch t := t.(type) {
 	case *types.Basic:
 		if input == nil {
 			log.Fatal("Can't expand basic type")
 		}
-		expandBasic(t, ref, input, slot)
+		ctx.expandBasic(t, ref, input, slot)
 	case *types.Pointer:
-		expandType(t.Elem(), varHint, true, input, slot)
+		ctx.expandType(t.Elem(), varHint, true, input, slot)
 	case *types.Slice:
-		expandSlice(t, varHint, ref, input, slot)
+		ctx.expandSlice(t, varHint, ref, input, slot)
 	case *types.Map:
-		expandMap(t, varHint, ref, input, slot)
+		ctx.expandMap(t, varHint, ref, input, slot)
 	case *types.Named:
-		expandNamedType(t, varHint, ref, input, slot)
+		ctx.expandNamedType(t, varHint, ref, input, slot)
 	default:
 		// Ignore: Array, Chan, Tuple, Signature, Struct, Interface
 		return
 	}
 }
 
-func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	switch t.Underlying().(type) {
 	case *types.Basic:
 		if input == nil {
 			log.Fatal("Can't expand basic type")
 		}
-		expandNamedBasic(t, varHint, ref, input, slot)
+		ctx.expandNamedBasic(t, varHint, ref, input, slot)
 	case *types.Pointer:
-		expandNamedPointer(t, varHint, ref, input, slot)
+		ctx.expandNamedPointer(t, varHint, ref, input, slot)
 	case *types.Slice:
-		expandNamedSlice(t, varHint, ref, input, slot)
+		ctx.expandNamedSlice(t, varHint, ref, input, slot)
 	case *types.Map:
-		expandNamedMap(t, varHint, ref, input, slot)
+		ctx.expandNamedMap(t, varHint, ref, input, slot)
 	case *types.Struct:
-		expandNamedStruct(t, varHint, ref, input, slot)
+		ctx.expandNamedStruct(t, varHint, ref, input, slot)
 	case *types.Interface:
 		panic("TODO")
 	default:
@@ -123,7 +128,7 @@ func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement
 	}
 }
 
-func expandBasic(t *types.Basic, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandBasic(t *types.Basic, ref bool, input *Statement, slot expandSlot) {
 	cs := input.Assert(Id(t.Name()))
 	if ref {
 		cs = ptrUtils[t.Name()].Clone().Call(cs)
@@ -131,7 +136,7 @@ func expandBasic(t *types.Basic, ref bool, input *Statement, slot expandSlot) {
 	slot.assign.Add(cs)
 }
 
-func expandNamedBasic(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandNamedBasic(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	cs := input.Assert(qualifiedNamedType(t))
 	if !ref {
 		slot.assign.Add(cs)
@@ -147,9 +152,9 @@ func expandNamedBasic(t *types.Named, varHint *string, ref bool, input *Statemen
 	slot.assign.Add(Op("&").Id(localVar))
 }
 
-func expandNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
 	if input == nil {
-		expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, nil, slot)
+		ctx.expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, nil, slot)
 		return
 	}
 
@@ -159,11 +164,11 @@ func expandNamedPointer(t *types.Named, hint *string, ref bool, input *Statement
 		define: slot.define,
 		assign: assignSlot,
 	}
-	expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, input, newSlot)
+	ctx.expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, input, newSlot)
 	slot.assign.Add(Id(t.Obj().Name()).Call(assignSlot))
 }
 
-func expandSlice(t *types.Slice, varHint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandSlice(t *types.Slice, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	etName, et, isPtr := elemType(t.Elem())
 	if isPtr {
 		etName += "Ptr"
@@ -183,6 +188,11 @@ func expandSlice(t *types.Slice, varHint *string, ref bool, input *Statement, sl
 	}
 
 	// Create an expand function for the given type
+	if ctx.existFuncs[expandFuncName] {
+		return
+	}
+	defer func() { ctx.existFuncs[expandFuncName] = true }()
+
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Index().Interface(),
 	).Do(func(stmt *Statement) {
@@ -216,7 +226,7 @@ func expandSlice(t *types.Slice, varHint *string, ref bool, input *Statement, sl
 			}
 
 			localVar := _idLocalVar
-			expandType(t.Elem(), &localVar, false, Id(_idSliceElem), newSlot)
+			ctx.expandType(t.Elem(), &localVar, false, Id(_idSliceElem), newSlot)
 
 			g.For(List(Id("_"), Id(_idSliceElem)).Op(":=").Range().Id(_idInput)).Block(
 				defineSlot,
@@ -231,7 +241,7 @@ func expandSlice(t *types.Slice, varHint *string, ref bool, input *Statement, sl
 		})
 }
 
-func expandNamedSlice(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandNamedSlice(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
 	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
 	if ref {
 		expandFuncName += "Ptr"
@@ -243,6 +253,11 @@ func expandNamedSlice(t *types.Named, hint *string, ref bool, input *Statement, 
 	}
 
 	// Create an expand function for the given type
+	if ctx.existFuncs[expandFuncName] {
+		return
+	}
+	defer func() { ctx.existFuncs[expandFuncName] = true }()
+
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Index().Interface(),
 	).Do(func(stmt *Statement) {
@@ -276,7 +291,7 @@ func expandNamedSlice(t *types.Named, hint *string, ref bool, input *Statement, 
 			}
 
 			localVar := _idLocalVar
-			expandType(t.Underlying().(*types.Slice).Elem(), &localVar, false, Id(_idSliceElem), newSlot)
+			ctx.expandType(t.Underlying().(*types.Slice).Elem(), &localVar, false, Id(_idSliceElem), newSlot)
 
 			g.For(List(Id("_"), Id(_idSliceElem)).Op(":=").Range().Id(_idInput)).Block(
 				defineSlot,
@@ -291,7 +306,7 @@ func expandNamedSlice(t *types.Named, hint *string, ref bool, input *Statement, 
 		})
 }
 
-func expandMap(t *types.Map, hint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandMap(t *types.Map, hint *string, ref bool, input *Statement, slot expandSlot) {
 	// Type guard, Terraform only support map[string]interface{}, it is non-trivial to expand from a non-string keyed map to Terraform.
 	ut := t.Underlying().(*types.Map)
 	kt, ok := ut.Key().(*types.Basic)
@@ -319,6 +334,11 @@ func expandMap(t *types.Map, hint *string, ref bool, input *Statement, slot expa
 	}
 
 	// Create an expand function for the given type
+	if ctx.existFuncs[expandFuncName] {
+		return
+	}
+	defer func() { ctx.existFuncs[expandFuncName] = true }()
+
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Map(String()).Interface(),
 	).Do(func(stmt *Statement) {
@@ -343,7 +363,7 @@ func expandMap(t *types.Map, hint *string, ref bool, input *Statement, slot expa
 			}
 
 			localVar := _idLocalVar
-			expandType(t.Elem(), &localVar, false, Id("v"), newSlot)
+			ctx.expandType(t.Elem(), &localVar, false, Id("v"), newSlot)
 
 			g.For(List(Id("k"), Id("v")).Op(":=").Range().Id(_idInput)).Block(
 				defineSlot,
@@ -358,7 +378,7 @@ func expandMap(t *types.Map, hint *string, ref bool, input *Statement, slot expa
 		})
 }
 
-func expandNamedMap(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandNamedMap(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
 	// Type guard, Terraform only support map[string]interface{}, it is non-trivial to expand from a non-string keyed map to Terraform.
 	ut := t.Underlying().(*types.Map)
 	kt, ok := ut.Key().(*types.Basic)
@@ -377,6 +397,11 @@ func expandNamedMap(t *types.Named, hint *string, ref bool, input *Statement, sl
 	}
 
 	// Create an expand function for the given type
+	if ctx.existFuncs[expandFuncName] {
+		return
+	}
+	defer func() { ctx.existFuncs[expandFuncName] = true }()
+
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Map(String()).Interface(),
 	).Do(func(stmt *Statement) {
@@ -385,38 +410,38 @@ func expandNamedMap(t *types.Named, hint *string, ref bool, input *Statement, sl
 		}
 	}).Add(qualifiedNamedType(t)).
 
-	// Function block
-	BlockFunc(func(g *Group) {
-		// Initialize the output map, e.g.
-		//
-		// output := make(map[string]*string)
-		g.Id(_idOutput).Op(":=").Make(qualifiedNamedType(t))
+		// Function block
+		BlockFunc(func(g *Group) {
+			// Initialize the output map, e.g.
+			//
+			// output := make(map[string]*string)
+			g.Id(_idOutput).Op(":=").Make(qualifiedNamedType(t))
 
-		// Prepare the slots
-		assignSlot, defineSlot := &Statement{}, &Statement{}
-		newSlot := expandSlot{
-			f:      slot.f,
-			assign: assignSlot,
-			define: defineSlot,
-		}
-
-		localVar := _idLocalVar
-		expandType(ut.Elem(), &localVar, false, Id("v"), newSlot)
-
-		g.For(List(Id("k"), Id("v")).Op(":=").Range().Id(_idInput)).Block(
-			defineSlot,
-			Id(_idOutput).Index(Id("k")).Op("=").Add(assignSlot),
-		)
-
-		g.Return(Do(func(stmt *Statement) {
-			if ref {
-				stmt.Op("&")
+			// Prepare the slots
+			assignSlot, defineSlot := &Statement{}, &Statement{}
+			newSlot := expandSlot{
+				f:      slot.f,
+				assign: assignSlot,
+				define: defineSlot,
 			}
-		}).Id(_idOutput))
-	})
+
+			localVar := _idLocalVar
+			ctx.expandType(ut.Elem(), &localVar, false, Id("v"), newSlot)
+
+			g.For(List(Id("k"), Id("v")).Op(":=").Range().Id(_idInput)).Block(
+				defineSlot,
+				Id(_idOutput).Index(Id("k")).Op("=").Add(assignSlot),
+			)
+
+			g.Return(Do(func(stmt *Statement) {
+				if ref {
+					stmt.Op("&")
+				}
+			}).Id(_idOutput))
+		})
 }
 
-func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
 	if ref {
 		expandFuncName += "Ptr"
@@ -428,6 +453,11 @@ func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Stateme
 	}
 
 	// Create an expand function for the given type
+	if ctx.existFuncs[expandFuncName] {
+		return
+	}
+	defer func() { ctx.existFuncs[expandFuncName] = true }()
+
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Index().Interface(),
 	).Do(func(stmt *Statement) {
@@ -479,7 +509,7 @@ func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Stateme
 				assignSlot := &Statement{}
 				defineSlots = append(defineSlots, defineSlot)
 				assignSlots = append(assignSlots, assignSlot)
-				ctx := slotCtx{
+				sctx := slotCtx{
 					field: v,
 					slot: expandSlot{
 						f:      slot.f,
@@ -489,11 +519,11 @@ func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Stateme
 					input:    Id(_idEncloseBlock).Index(Lit(strcase.ToSnake(v.Name()))),
 					localVar: strcase.ToLowerCamel(v.Name()),
 				}
-				slotCtxList = append(slotCtxList, ctx)
+				slotCtxList = append(slotCtxList, sctx)
 			}
 
-			for i, ctx := range slotCtxList {
-				expandType(ctx.field.Type(), &ctx.localVar, false, ctx.input, ctx.slot)
+			for i, sctx := range slotCtxList {
+				ctx.expandType(sctx.field.Type(), &sctx.localVar, false, sctx.input, sctx.slot)
 				g.Add(defineSlots[i])
 			}
 
@@ -502,8 +532,8 @@ func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Stateme
 					stmt.Op("&")
 				}
 			}).Add(qualifiedNamedType(t)).Values(DictFunc(func(d Dict) {
-				for idx, ctx := range slotCtxList {
-					d[Id(ctx.field.Name())] = assignSlots[idx]
+				for idx, sctx := range slotCtxList {
+					d[Id(sctx.field.Name())] = assignSlots[idx]
 				}
 			}))
 			g.Return(Id(_idOutput))

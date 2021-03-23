@@ -210,6 +210,13 @@ type TypeNamedStructSliceCollection struct {
 	S1PtrSlicePtr *[]*TypeS1
 }
 
+type TypeNamedStructMapCollection struct {
+	S1Map       map[string]TypeS1
+	S1MapPtr    *map[string]TypeS1
+	S1PtrMap    map[string]*TypeS1
+	S1PtrMapPtr *map[string]*TypeS1
+}
+
 type TypeIntSliceAlias []int
 
 type TypeIntPtrSliceAlias []*int
@@ -217,6 +224,14 @@ type TypeIntPtrSliceAlias []*int
 type TypeNamedBoolSliceAlias []Bool
 
 type TypeNamedStructSliceAlias []TypeS1
+
+type TypeIntMapAlias map[string]int
+
+type TypeIntPtrMapAlias map[string]*int
+
+type TypeNamedBoolMapAlias map[string]Bool
+
+type TypeNamedStructMapAlias map[string]TypeS1
 
 type TypeNamedStructAlias TypeS1
 

@@ -102,6 +102,9 @@ func TestExpand(t *testing.T) {
 			typ: "TypeNamedStructSliceCollection",
 		},
 		{
+			typ: "TypeNamedStructMapCollection",
+		},
+		{
 			typ: "TypeIntSliceAlias",
 		},
 		{
@@ -111,7 +114,19 @@ func TestExpand(t *testing.T) {
 			typ: "TypeNamedBoolSliceAlias",
 		},
 		{
-			typ: "TypeNamedBoolSliceAlias",
+			typ: "TypeNamedStructSliceAlias",
+		},
+		{
+			typ: "TypeIntMapAlias",
+		},
+		{
+			typ: "TypeIntPtrMapAlias",
+		},
+		{
+			typ: "TypeNamedBoolMapAlias",
+		},
+		{
+			typ: "TypeNamedStructMapAlias",
 		},
 		{
 			typ: "TypeNamedStructSliceAlias",

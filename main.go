@@ -112,7 +112,7 @@ func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement
 	case *types.Slice:
 		expandNamedSlice(t, varHint, ref, input, slot)
 	case *types.Map:
-		panic("TODO")
+		expandNamedMap(t, varHint, ref, input, slot)
 	case *types.Struct:
 		expandNamedStruct(t, varHint, ref, input, slot)
 	case *types.Interface:
@@ -356,6 +356,64 @@ func expandMap(t *types.Map, hint *string, ref bool, input *Statement, slot expa
 				}
 			}).Id(_idOutput))
 		})
+}
+
+func expandNamedMap(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+	// Type guard, Terraform only support map[string]interface{}, it is non-trivial to expand from a non-string keyed map to Terraform.
+	ut := t.Underlying().(*types.Map)
+	kt, ok := ut.Key().(*types.Basic)
+	if !ok || kt.Kind() != types.String {
+		log.Fatalf("Only support expanding Map with String key (%v has key type %v)", t, kt)
+	}
+
+	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
+	if ref {
+		expandFuncName += "Ptr"
+	}
+
+	// Fill in the assign slot of the invoker.
+	if slot.assign != nil {
+		slot.assign.Add(Id(expandFuncName).Call(input.Assert(Map(String()).Interface())))
+	}
+
+	// Create an expand function for the given type
+	slot.f.Func().Id(expandFuncName).Params(
+		Id(_idInput).Map(String()).Interface(),
+	).Do(func(stmt *Statement) {
+		if ref {
+			stmt.Op("*")
+		}
+	}).Add(qualifiedNamedType(t)).
+
+	// Function block
+	BlockFunc(func(g *Group) {
+		// Initialize the output map, e.g.
+		//
+		// output := make(map[string]*string)
+		g.Id(_idOutput).Op(":=").Make(qualifiedNamedType(t))
+
+		// Prepare the slots
+		assignSlot, defineSlot := &Statement{}, &Statement{}
+		newSlot := expandSlot{
+			f:      slot.f,
+			assign: assignSlot,
+			define: defineSlot,
+		}
+
+		localVar := _idLocalVar
+		expandType(ut.Elem(), &localVar, false, Id("v"), newSlot)
+
+		g.For(List(Id("k"), Id("v")).Op(":=").Range().Id(_idInput)).Block(
+			defineSlot,
+			Id(_idOutput).Index(Id("k")).Op("=").Add(assignSlot),
+		)
+
+		g.Return(Do(func(stmt *Statement) {
+			if ref {
+				stmt.Op("&")
+			}
+		}).Id(_idOutput))
+	})
 }
 
 func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {

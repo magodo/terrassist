@@ -147,3 +147,7 @@ type TypeIntPtrSliceAlias []*int
 type TypeNamedBoolSliceAlias []Bool
 
 type TypeNamedStructSliceAlias []TypeS1
+
+type TypeNamedStructAlias TypeS1
+
+type TypeNamedStructPtrAlias *TypeS1

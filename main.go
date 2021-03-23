@@ -82,6 +82,9 @@ type expandSlot struct {
 func expandType(t types.Type, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	switch t := t.(type) {
 	case *types.Basic:
+		if input == nil {
+			log.Fatal( "Can't expand basic type")
+		}
 		expandBasic(t, ref, input, slot)
 	case *types.Pointer:
 		expandType(t.Elem(), varHint, true, input, slot)
@@ -97,12 +100,51 @@ func expandType(t types.Type, varHint *string, ref bool, input *Statement, slot 
 	}
 }
 
+func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
+	switch t.Underlying().(type) {
+	case *types.Basic:
+		if input == nil {
+			log.Fatal( "Can't expand basic type")
+		}
+		expandNamedBasic(t, varHint, ref, input, slot)
+	case *types.Pointer:
+		expandNamedPointer(t, varHint, ref, input, slot)
+	case *types.Slice:
+		expandNamedSlice(t, varHint, ref, input, slot)
+	case *types.Map:
+		panic("TODO")
+	case *types.Struct:
+		expandNamedStruct(t, varHint, ref, input, slot)
+	case *types.Interface:
+		panic("TODO")
+	default:
+		// Array, Chan, Tuple, Signature
+		return
+	}
+}
+
 func expandBasic(t *types.Basic, ref bool, input *Statement, slot expandSlot) {
 	cs := input.Assert(Id(t.Name()))
 	if ref {
 		cs = ptrUtils[t.Name()].Clone().Call(cs)
 	}
 	slot.assign.Add(cs)
+}
+
+func expandNamedBasic(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
+	cs := input.Assert(qualifiedNamedType(t))
+	if !ref {
+		slot.assign.Add(cs)
+		return
+	}
+
+	localVar := _idLocalVar
+	if varHint != nil {
+		localVar = *varHint
+	}
+	slot.define.Add(Id(localVar).Op(":=").Add(cs))
+
+	slot.assign.Add(Op("&").Id(localVar))
 }
 
 func expandSlice(t *types.Slice, varHint *string, ref bool, input *Statement, slot expandSlot) {
@@ -173,26 +215,6 @@ func expandSlice(t *types.Slice, varHint *string, ref bool, input *Statement, sl
 		})
 }
 
-func expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
-	switch t.Underlying().(type) {
-	case *types.Basic:
-		expandNamedBasic(t, varHint, ref, input, slot)
-	case *types.Pointer:
-		expandNamedPointer(t, varHint, ref, input, slot)
-	case *types.Slice:
-		expandNamedSlice(t, varHint, ref, input, slot)
-	case *types.Map:
-		panic("TODO")
-	case *types.Struct:
-		expandNamedStruct(t, varHint, ref, input, slot)
-	case *types.Interface:
-		panic("TODO")
-	default:
-		// Array, Chan, Tuple, Signature
-		return
-	}
-}
-
 func expandNamedSlice(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
 	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
 	if ref {
@@ -254,30 +276,19 @@ func expandNamedSlice(t *types.Named, hint *string, ref bool, input *Statement, 
 }
 
 func expandNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+	if input == nil {
+		expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, nil, slot)
+		return
+	}
+
 	assignSlot := &Statement{}
 	newSlot := expandSlot{
 		f:      slot.f,
 		define: slot.define,
 		assign: assignSlot,
 	}
-	expandType(t.Underlying(), hint, true, input, newSlot)
+	expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, input, newSlot)
 	slot.assign.Add(Id(t.Obj().Name()).Call(assignSlot))
-}
-
-func expandNamedBasic(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
-	cs := input.Assert(qualifiedNamedType(t))
-	if !ref {
-		slot.assign.Add(cs)
-		return
-	}
-
-	localVar := _idLocalVar
-	if varHint != nil {
-		localVar = *varHint
-	}
-	slot.define.Add(Id(localVar).Op(":=").Add(cs))
-
-	slot.assign.Add(Op("&").Id(localVar))
 }
 
 func expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
@@ -401,5 +412,5 @@ func sliceElemType(t *types.Slice) (name string, stmt *Statement, ref bool) {
 	case *types.Basic:
 		return et.Name(), Id(et.Name()), ref
 	}
-	panic("Currently, we only support slice of named type, primary type or pointer of those types.")
+	panic(fmt.Sprintf("Currently, we only support slice of named type, primary type or pointer of those types. But got: %v (elem: %v)", t, et))
 }

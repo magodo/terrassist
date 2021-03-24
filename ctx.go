@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/dave/dst/decorator"
 	. "github.com/dave/jennifer/jen"
-	"go/ast"
 	"go/types"
 	"golang.org/x/tools/go/packages"
 	"log"
+	"os"
 )
 
 const _idEncloseBlock = "b"
@@ -163,28 +162,37 @@ func elemType(et types.Type) (name string, stmt *Statement, ref bool) {
 }
 
 func (ctx *Ctx) run(dir string, pkgName string, typeName string) *File {
-	pkgs, err := decorator.Load(&packages.Config{Dir: dir, Mode: packages.LoadSyntax}, pkgName)
+	thisPkgs, err := packages.Load(&packages.Config{Dir: dir})
 	if err != nil {
 		log.Fatal(err)
 	}
+	if packages.PrintErrors(thisPkgs) > 0 {
+		os.Exit(1)
+	}
+	thisPkg := thisPkgs[0]
 
+	pkgs, err := packages.Load(&packages.Config{Dir: dir, Mode: packages.LoadSyntax}, pkgName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if packages.PrintErrors(pkgs) > 0 {
+		os.Exit(1)
+	}
 	pkg := pkgs[0]
 
-	var targetIdent *ast.Ident
-	for ident := range pkg.TypesInfo.Defs {
-		if ident.Name == typeName {
-			targetIdent = ident
+	var t types.Type
+	for _, obj := range pkg.TypesInfo.Defs {
+		if _, ok := obj.(*types.TypeName); ok && obj.Name() == typeName {
+			t = obj.Type()
 			break
 		}
 	}
-	if targetIdent == nil {
+	if t == nil {
 		log.Fatalf("no type named %q found in package %q", typeName, pkgName)
 	}
 
-	typeObj := pkg.TypesInfo.Defs[targetIdent]
-
-	f := NewFile("output")
-	ctx.expandType(typeObj.Type(), nil, ctx.forPointer, nil, expandSlot{f: f})
-	ctx.flattenType(typeObj.Type(), nil, ctx.forPointer, nil, flattenSlot{f: f})
+	f := NewFile(thisPkg.Name)
+	ctx.expandType(t, nil, ctx.forPointer, nil, expandSlot{f: f})
+	ctx.flattenType(t, nil, ctx.forPointer, nil, flattenSlot{f: f})
 	return f
 }

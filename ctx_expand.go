@@ -24,6 +24,9 @@ func (ctx *Ctx) expandType(t types.Type, varHint *string, ref bool, input *State
 		}
 		ctx.expandBasic(t, varHint, ref, input, slot)
 	case *types.Pointer:
+		if ref == true {
+			log.Fatalf("Can't expand pointer to pointer (%v)", t)
+		}
 		ctx.expandType(t.Elem(), varHint, true, input, slot)
 	case *types.Slice:
 		ctx.expandSlice(t, varHint, ref, input, slot)
@@ -45,6 +48,9 @@ func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input
 		}
 		ctx.expandNamedBasic(t, varHint, ref, input, slot)
 	case *types.Pointer:
+		if ref == true {
+			log.Fatalf("Can't expand pointer to pointer (%v)", t)
+		}
 		ctx.expandNamedPointer(t, varHint, ref, input, slot)
 	case *types.Slice:
 		ctx.expandNamedSlice(t, varHint, ref, input, slot)
@@ -52,10 +58,8 @@ func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input
 		ctx.expandNamedMap(t, varHint, ref, input, slot)
 	case *types.Struct:
 		ctx.expandNamedStruct(t, varHint, ref, input, slot)
-	case *types.Interface:
-		panic("TODO")
 	default:
-		// Array, Chan, Tuple, Signature
+		// Array, Chan, Tuple, Signature, Interface
 		return
 	}
 }

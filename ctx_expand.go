@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/types"
 	"log"
+	"reflect"
 
 	. "github.com/dave/jennifer/jen"
 	"github.com/iancoleman/strcase"
@@ -122,7 +123,7 @@ func (ctx *Ctx) expandSlice(t *types.Slice, varHint *string, ref bool, input *St
 	if ctx.existFuncs[expandFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[expandFuncName] = true }()
+	ctx.existFuncs[expandFuncName] = true
 
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Index().Interface(),
@@ -187,7 +188,7 @@ func (ctx *Ctx) expandNamedSlice(t *types.Named, hint *string, ref bool, input *
 	if ctx.existFuncs[expandFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[expandFuncName] = true }()
+	ctx.existFuncs[expandFuncName] = true
 
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Index().Interface(),
@@ -267,7 +268,7 @@ func (ctx *Ctx) expandMap(t *types.Map, hint *string, ref bool, input *Statement
 	if ctx.existFuncs[expandFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[expandFuncName] = true }()
+	ctx.existFuncs[expandFuncName] = true
 
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Map(String()).Interface(),
@@ -330,7 +331,7 @@ func (ctx *Ctx) expandNamedMap(t *types.Named, hint *string, ref bool, input *St
 	if ctx.existFuncs[expandFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[expandFuncName] = true }()
+	ctx.existFuncs[expandFuncName] = true
 
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Map(String()).Interface(),
@@ -386,7 +387,7 @@ func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, inp
 	if ctx.existFuncs[expandFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[expandFuncName] = true }()
+	ctx.existFuncs[expandFuncName] = true
 
 	slot.f.Func().Id(expandFuncName).Params(
 		Id(_idInput).Index().Interface(),
@@ -432,6 +433,12 @@ func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, inp
 				v := ut.Field(i)
 				if !v.Exported() {
 					continue
+				}
+
+				if ctx.honorJSONIgnore {
+					if reflect.StructTag(ut.Tag(i)).Get("json") == "-" {
+						continue
+					}
 				}
 
 				defineSlot := g

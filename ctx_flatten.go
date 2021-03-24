@@ -6,6 +6,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"go/types"
 	"log"
+	"reflect"
 )
 
 type flattenSlot struct {
@@ -157,7 +158,7 @@ func (ctx *Ctx) flattenSlice(t *types.Slice, hint *string, ref bool, input *Stat
 	if ctx.existFuncs[flattenFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[flattenFuncName] = true }()
+	ctx.existFuncs[flattenFuncName] = true
 
 	slot.f.Func().Id(flattenFuncName).Params(
 		Id(_idInput).Do(func(stmt *Statement) {
@@ -223,7 +224,7 @@ func (ctx *Ctx) flattenNamedSlice(t *types.Named, hint *string, ref bool, input 
 	if ctx.existFuncs[flattenFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[flattenFuncName] = true }()
+	ctx.existFuncs[flattenFuncName] = true
 
 	slot.f.Func().Id(flattenFuncName).Params(
 		Id(_idInput).Do(func(stmt *Statement) {
@@ -304,7 +305,7 @@ func (ctx *Ctx) flattenMap(t *types.Map, hint *string, ref bool, input *Statemen
 	if ctx.existFuncs[flattenFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[flattenFuncName] = true }()
+	ctx.existFuncs[flattenFuncName] = true
 
 	slot.f.Func().Id(flattenFuncName).Params(
 		Id(_idInput).Do(func(stmt *Statement) {
@@ -375,7 +376,7 @@ func (ctx *Ctx) flattenNamedMap(t *types.Named, hint *string, ref bool, input *S
 	if ctx.existFuncs[flattenFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[flattenFuncName] = true }()
+	ctx.existFuncs[flattenFuncName] = true
 
 	slot.f.Func().Id(flattenFuncName).Params(
 		Id(_idInput).Add(qualifiedNamedType(t)),
@@ -433,7 +434,7 @@ func (ctx *Ctx) flattenNamedStruct(t *types.Named, hint *string, ref bool, input
 	if ctx.existFuncs[flattenFuncName] {
 		return
 	}
-	defer func() { ctx.existFuncs[flattenFuncName] = true }()
+	ctx.existFuncs[flattenFuncName] = true
 
 	slot.f.Func().Id(flattenFuncName).Params(
 		Id(_idInput).Do(func(stmt *Statement) {
@@ -472,6 +473,12 @@ func (ctx *Ctx) flattenNamedStruct(t *types.Named, hint *string, ref bool, input
 				v := ut.Field(i)
 				if !v.Exported() {
 					continue
+				}
+
+				if ctx.honorJSONIgnore {
+					if reflect.StructTag(ut.Tag(i)).Get("json") == "-" {
+						continue
+					}
 				}
 
 				defineSlot := g

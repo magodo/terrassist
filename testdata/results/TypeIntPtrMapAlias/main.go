@@ -12,3 +12,14 @@ func expandTypeIntPtrMapAlias(input map[string]interface{}) types.TypeIntPtrMapA
 	}
 	return output
 }
+func flattenTypeIntPtrMapAlias(input types.TypeIntPtrMapAlias) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		e := 0
+		if v != nil {
+			e = *v
+		}
+		output[k] = e
+	}
+	return output
+}

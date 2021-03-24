@@ -239,14 +239,13 @@ func (ctx *Ctx) expandNamedSlice(t *types.Named, hint *string, ref bool, input *
 
 func (ctx *Ctx) expandMap(t *types.Map, hint *string, ref bool, input *Statement, slot expandSlot) {
 	// Type guard, Terraform only support map[string]interface{}, it is non-trivial to expand from a non-string keyed map to Terraform.
-	ut := t.Underlying().(*types.Map)
-	kt, ok := ut.Key().(*types.Basic)
+	kt, ok := t.Key().(*types.Basic)
 	if !ok || kt.Kind() != types.String {
 		log.Fatalf("Only support expanding Map with String key (%v has key type %v)", t, kt)
 	}
 
 	// Construct the expand function name.
-	etName, et, isPtr := elemType(ut.Elem())
+	etName, et, isPtr := elemType(t.Elem())
 	if isPtr {
 		etName += "Ptr"
 	}

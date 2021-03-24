@@ -46,3 +46,55 @@ func expandFloat64PtrMap(input map[string]interface{}) map[string]*float64 {
 	}
 	return output
 }
+func flattenTypePrimaryPtrMapCollection(input types.TypePrimaryPtrMapCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"bool_ptr_map":  flattenBoolPtrMap(input.BoolPtrMap),
+		"float_ptr_map": flattenFloat64PtrMap(input.FloatPtrMap),
+		"int_ptr_map":   flattenIntPtrMap(input.IntPtrMap),
+		"str_ptr_map":   flattenStringPtrMap(input.StrPtrMap),
+	}}
+}
+func flattenBoolPtrMap(input map[string]*bool) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		e := false
+		if v != nil {
+			e = *v
+		}
+		output[k] = e
+	}
+	return output
+}
+func flattenIntPtrMap(input map[string]*int) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		e := 0
+		if v != nil {
+			e = *v
+		}
+		output[k] = e
+	}
+	return output
+}
+func flattenStringPtrMap(input map[string]*string) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		e := ""
+		if v != nil {
+			e = *v
+		}
+		output[k] = e
+	}
+	return output
+}
+func flattenFloat64PtrMap(input map[string]*float64) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		e := 0.0
+		if v != nil {
+			e = *v
+		}
+		output[k] = e
+	}
+	return output
+}

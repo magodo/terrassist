@@ -275,10 +275,148 @@ func (ctx *Ctx) flattenNamedSlice(t *types.Named, hint *string, ref bool, input 
 }
 
 func (ctx *Ctx) flattenMap(t *types.Map, hint *string, ref bool, input *Statement, slot flattenSlot) {
-	panic("TODO")
+	// Type guard, Terraform only support map[string]interface{}, it is non-trivial to flatten to a non-string keyed map from Terraform.
+	kt, ok := t.Key().(*types.Basic)
+	if !ok || kt.Kind() != types.String {
+		log.Fatalf("Only support flatten Map with String key (%v has key type %v)", t, kt)
+	}
+
+	// Construct the flatten function name.
+	etName, et, isPtr := elemType(t.Elem())
+	if isPtr {
+		etName += "Ptr"
+	}
+	if isPtr {
+		et = Op("*").Add(et)
+	}
+
+	flattenFuncName := fmt.Sprintf("flatten%sMap", strcase.ToCamel(etName))
+	if ref {
+		flattenFuncName += "Ptr"
+	}
+
+	// Fill in the assign slot of the invoker.
+	if slot.assign != nil {
+		slot.assign.Add(Id(flattenFuncName).Call(input))
+	}
+
+	// Create a flatten function for the given type
+	if ctx.existFuncs[flattenFuncName] {
+		return
+	}
+	defer func() { ctx.existFuncs[flattenFuncName] = true }()
+
+	slot.f.Func().Id(flattenFuncName).Params(
+		Id(_idInput).Do(func(stmt *Statement) {
+			if ref {
+				stmt.Op("*")
+			}
+		}).Map(String()).Add(et),
+	).Map(String()).Interface().
+
+		// Function block
+		BlockFunc(func(g *Group) {
+			if ref {
+				// Nil check, e.g.
+				// if input == nil {
+				//   return map[string]interface{}{}
+				// }
+				g.If(Id(_idInput)).Op("==").Nil().Block(
+					Return(Map(String()).Interface().Values()),
+				)
+			}
+
+			// Initialize the output map, e.g.
+			//
+			// output := make(map[string]interface{})
+			g.Id(_idOutput).Op(":=").Make(Map(String()).Interface())
+
+			g.For(List(Id("k"), Id("v")).Op(":=").Range().Do(func(stmt *Statement) {
+				if ref {
+					stmt.Op("*")
+				}
+			}).Id(_idInput)).BlockFunc(func(ig *Group) {
+				assignSlot := &Statement{}
+				newSlot := flattenSlot{
+					f:      slot.f,
+					assign: assignSlot,
+					define: ig,
+				}
+				localVar := _idLocalVar
+				ctx.flattenType(t.Elem(), &localVar, false, Id("v"), newSlot)
+
+				ig.Id(_idOutput).Index(Id("k")).Op("=").Add(assignSlot)
+			})
+
+			g.Return(Id(_idOutput))
+		})
 }
+
 func (ctx *Ctx) flattenNamedMap(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot) {
-	panic("TODO")
+	// Type guard, Terraform only support map[string]interface{}, it is non-trivial to flatten to a non-string keyed map from Terraform.
+	ut := t.Underlying().(*types.Map)
+	kt, ok := ut.Key().(*types.Basic)
+	if !ok || kt.Kind() != types.String {
+		log.Fatalf("Only support flatten Map with String key (%v has key type %v)", t, kt)
+	}
+
+	// Construct the flatten function name.
+	flattenFuncName := fmt.Sprintf("flatten%s", strcase.ToCamel(t.Obj().Name()))
+	if ref {
+		flattenFuncName += "Ptr"
+	}
+
+	// Fill in the assign slot of the invoker.
+	if slot.assign != nil {
+		slot.assign.Add(Id(flattenFuncName).Call(input))
+	}
+
+	// Create a flatten function for the given type
+	if ctx.existFuncs[flattenFuncName] {
+		return
+	}
+	defer func() { ctx.existFuncs[flattenFuncName] = true }()
+
+	slot.f.Func().Id(flattenFuncName).Params(
+		Id(_idInput).Add(qualifiedNamedType(t)),
+	).Map(String()).Interface().
+
+		// Function block
+		BlockFunc(func(g *Group) {
+			if ref {
+				// Nil check, e.g.
+				// if input == nil {
+				//   return map[string]interface{}{}
+				// }
+				g.If(Id(_idInput)).Op("==").Nil().Block(
+					Return(Map(String()).Interface().Values()),
+				)
+			}
+
+			// Initialize the output map, e.g.
+			//
+			// output := make(map[string]interface{})
+			g.Id(_idOutput).Op(":=").Make(Map(String()).Interface())
+
+			g.For(List(Id("k"), Id("v")).Op(":=").Range().Do(func(stmt *Statement) {
+				if ref {
+					stmt.Op("*")
+				}
+			}).Id(_idInput)).BlockFunc(func(ig *Group) {
+				assignSlot := &Statement{}
+				newSlot := flattenSlot{
+					f:      slot.f,
+					assign: assignSlot,
+					define: ig,
+				}
+				localVar := _idLocalVar
+				ctx.flattenType(ut.Elem(), &localVar, false, Id("v"), newSlot)
+
+				ig.Id(_idOutput).Index(Id("k")).Op("=").Add(assignSlot)
+			})
+
+			g.Return(Id(_idOutput))
+		})
 }
 func (ctx *Ctx) flattenNamedStruct(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot) {
 	flattenFuncName := fmt.Sprintf("flatten%s", strcase.ToCamel(t.Obj().Name()))

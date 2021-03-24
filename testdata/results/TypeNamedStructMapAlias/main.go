@@ -17,3 +17,13 @@ func expandTypeS1(input []interface{}) types.TypeS1 {
 	output := types.TypeS1{I: b["i"].(int)}
 	return output
 }
+func flattenTypeNamedStructMapAlias(input types.TypeNamedStructMapAlias) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		output[k] = flattenTypeS1(v)
+	}
+	return output
+}
+func flattenTypeS1(input types.TypeS1) []interface{} {
+	return []interface{}{map[string]interface{}{"i": input.I}}
+}

@@ -59,3 +59,54 @@ func expandTypeS1PtrMapPtr(input map[string]interface{}) *map[string]*types.Type
 	}
 	return &output
 }
+func flattenTypeNamedStructMapCollection(input types.TypeNamedStructMapCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"s_1_map":         flattenTypeS1Map(input.S1Map),
+		"s_1_map_ptr":     flattenTypeS1MapPtr(input.S1MapPtr),
+		"s_1_ptr_map":     flattenTypeS1PtrMap(input.S1PtrMap),
+		"s_1_ptr_map_ptr": flattenTypeS1PtrMapPtr(input.S1PtrMapPtr),
+	}}
+}
+func flattenTypeS1Map(input map[string]types.TypeS1) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		output[k] = flattenTypeS1(v)
+	}
+	return output
+}
+func flattenTypeS1(input types.TypeS1) []interface{} {
+	return []interface{}{map[string]interface{}{"i": input.I}}
+}
+func flattenTypeS1MapPtr(input *map[string]types.TypeS1) map[string]interface{} {
+	if input == nil {
+		return map[string]interface{}{}
+	}
+	output := make(map[string]interface{})
+	for k, v := range *input {
+		output[k] = flattenTypeS1(v)
+	}
+	return output
+}
+func flattenTypeS1PtrMap(input map[string]*types.TypeS1) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		output[k] = flattenTypeS1Ptr(v)
+	}
+	return output
+}
+func flattenTypeS1Ptr(input *types.TypeS1) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+	return []interface{}{map[string]interface{}{"i": input.I}}
+}
+func flattenTypeS1PtrMapPtr(input *map[string]*types.TypeS1) map[string]interface{} {
+	if input == nil {
+		return map[string]interface{}{}
+	}
+	output := make(map[string]interface{})
+	for k, v := range *input {
+		output[k] = flattenTypeS1Ptr(v)
+	}
+	return output
+}

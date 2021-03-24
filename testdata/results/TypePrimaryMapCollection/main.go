@@ -43,3 +43,39 @@ func expandFloat64Map(input map[string]interface{}) map[string]float64 {
 	}
 	return output
 }
+func flattenTypePrimaryMapCollection(input types.TypePrimaryMapCollection) []interface{} {
+	return []interface{}{map[string]interface{}{
+		"bool_map":  flattenBoolMap(input.BoolMap),
+		"float_map": flattenFloat64Map(input.FloatMap),
+		"int_map":   flattenIntMap(input.IntMap),
+		"str_map":   flattenStringMap(input.StrMap),
+	}}
+}
+func flattenBoolMap(input map[string]bool) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		output[k] = v
+	}
+	return output
+}
+func flattenIntMap(input map[string]int) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		output[k] = v
+	}
+	return output
+}
+func flattenStringMap(input map[string]string) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		output[k] = v
+	}
+	return output
+}
+func flattenFloat64Map(input map[string]float64) map[string]interface{} {
+	output := make(map[string]interface{})
+	for k, v := range input {
+		output[k] = v
+	}
+	return output
+}

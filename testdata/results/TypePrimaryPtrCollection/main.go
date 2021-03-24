@@ -19,19 +19,19 @@ func expandTypePrimaryPtrCollection(input []interface{}) types.TypePrimaryPtrCol
 	return output
 }
 func flattenTypePrimaryPtrCollection(input types.TypePrimaryPtrCollection) []interface{} {
-	ptrBool := false
+	var ptrBool bool
 	if input.PtrBool != nil {
 		ptrBool = *input.PtrBool
 	}
-	ptrInt := 0
+	var ptrInt int
 	if input.PtrInt != nil {
 		ptrInt = *input.PtrInt
 	}
-	ptrStr := ""
+	var ptrStr string
 	if input.PtrStr != nil {
 		ptrStr = *input.PtrStr
 	}
-	ptrFloat := 0.0
+	var ptrFloat float64
 	if input.PtrFloat != nil {
 		ptrFloat = *input.PtrFloat
 	}

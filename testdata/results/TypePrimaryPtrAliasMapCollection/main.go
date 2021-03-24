@@ -57,7 +57,7 @@ func flattenTypePrimaryPtrAliasMapCollection(input types.TypePrimaryPtrAliasMapC
 func flattenBoolPtrMap(input map[string]types.BoolPtr) map[string]interface{} {
 	output := make(map[string]interface{})
 	for k, v := range input {
-		e := false
+		var e bool
 		if v != nil {
 			e = *v
 		}
@@ -68,7 +68,7 @@ func flattenBoolPtrMap(input map[string]types.BoolPtr) map[string]interface{} {
 func flattenIntPtrMap(input map[string]types.IntPtr) map[string]interface{} {
 	output := make(map[string]interface{})
 	for k, v := range input {
-		e := 0
+		var e int
 		if v != nil {
 			e = *v
 		}
@@ -79,7 +79,7 @@ func flattenIntPtrMap(input map[string]types.IntPtr) map[string]interface{} {
 func flattenStrPtrMap(input map[string]types.StrPtr) map[string]interface{} {
 	output := make(map[string]interface{})
 	for k, v := range input {
-		e := ""
+		var e string
 		if v != nil {
 			e = *v
 		}
@@ -90,7 +90,7 @@ func flattenStrPtrMap(input map[string]types.StrPtr) map[string]interface{} {
 func flattenFloatPtrMap(input map[string]types.FloatPtr) map[string]interface{} {
 	output := make(map[string]interface{})
 	for k, v := range input {
-		e := 0.0
+		var e float64
 		if v != nil {
 			e = *v
 		}

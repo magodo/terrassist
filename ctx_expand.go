@@ -63,7 +63,7 @@ func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input
 func (ctx *Ctx) expandBasic(t *types.Basic, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	cs := input.Assert(Id(t.Name()))
 	if ref {
-		cs = ptrUtils[t.Name()].Clone().Call(cs)
+		cs = basicTypeInfoMap[t.Kind()].PtrHelperFunc.Clone().Call(cs)
 	}
 	slot.assign.Add(cs)
 }
@@ -452,7 +452,7 @@ func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, inp
 						assign: assignSlot,
 					},
 					input:    Id(_idEncloseBlock).Index(Lit(strcase.ToSnake(v.Name()))),
-					localVar: strcase.ToLowerCamel(v.Name()),
+					localVar: newIdent(strcase.ToLowerCamel(v.Name())),
 				}
 				slotCtxList = append(slotCtxList, sctx)
 			}

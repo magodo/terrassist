@@ -60,7 +60,7 @@ func flattenBoolPtrMapPtr(input *map[string]*bool) map[string]interface{} {
 	}
 	output := make(map[string]interface{})
 	for k, v := range *input {
-		e := false
+		var e bool
 		if v != nil {
 			e = *v
 		}
@@ -74,7 +74,7 @@ func flattenIntPtrMapPtr(input *map[string]*int) map[string]interface{} {
 	}
 	output := make(map[string]interface{})
 	for k, v := range *input {
-		e := 0
+		var e int
 		if v != nil {
 			e = *v
 		}
@@ -88,7 +88,7 @@ func flattenStringPtrMapPtr(input *map[string]*string) map[string]interface{} {
 	}
 	output := make(map[string]interface{})
 	for k, v := range *input {
-		e := ""
+		var e string
 		if v != nil {
 			e = *v
 		}
@@ -102,7 +102,7 @@ func flattenFloat64PtrMapPtr(input *map[string]*float64) map[string]interface{} 
 	}
 	output := make(map[string]interface{})
 	for k, v := range *input {
-		e := 0.0
+		var e float64
 		if v != nil {
 			e = *v
 		}

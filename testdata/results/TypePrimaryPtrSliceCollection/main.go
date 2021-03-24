@@ -69,7 +69,7 @@ func flattenTypePrimaryPtrSliceCollection(input types.TypePrimaryPtrSliceCollect
 func flattenBoolPtrSlice(input []*bool) []interface{} {
 	output := make([]interface{}, 0)
 	for _, elem := range input {
-		e := false
+		var e bool
 		if elem != nil {
 			e = *elem
 		}
@@ -80,7 +80,7 @@ func flattenBoolPtrSlice(input []*bool) []interface{} {
 func flattenIntPtrSlice(input []*int) []interface{} {
 	output := make([]interface{}, 0)
 	for _, elem := range input {
-		e := 0
+		var e int
 		if elem != nil {
 			e = *elem
 		}
@@ -91,7 +91,7 @@ func flattenIntPtrSlice(input []*int) []interface{} {
 func flattenStringPtrSlice(input []*string) []interface{} {
 	output := make([]interface{}, 0)
 	for _, elem := range input {
-		e := ""
+		var e string
 		if elem != nil {
 			e = *elem
 		}
@@ -102,7 +102,7 @@ func flattenStringPtrSlice(input []*string) []interface{} {
 func flattenFloat64PtrSlice(input []*float64) []interface{} {
 	output := make([]interface{}, 0)
 	for _, elem := range input {
-		e := 0.0
+		var e float64
 		if elem != nil {
 			e = *elem
 		}

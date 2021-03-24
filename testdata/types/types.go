@@ -246,3 +246,8 @@ type TypeNamedStructWithJSONIgnore struct {
 type TypeCyclicRefStruct struct {
 	Self *TypeCyclicRefStruct
 }
+
+type TypeNamedStructWithGoReservedWord struct {
+	Go *string
+	If *string
+}

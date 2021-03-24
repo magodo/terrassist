@@ -22,13 +22,6 @@ var zeroValues = map[types.BasicKind]*Statement{
 	types.Float64: Lit(0.0),
 }
 
-var typeCovertFunc = map[types.BasicKind]*Statement{
-	types.Bool:    Bool(),
-	types.String:  String(),
-	types.Int:     Int(),
-	types.Float64: Float64(),
-}
-
 func (ctx *Ctx) flattenType(t types.Type, varHint *string, ref bool, input *Statement, slot flattenSlot) {
 	switch t := t.(type) {
 	case *types.Basic:
@@ -86,7 +79,7 @@ func (ctx *Ctx) flattenBasic(t *types.Basic, hint *string, ref bool, input *Stat
 
 	slot.assign.Add(Id(localVar))
 	slot.define.Add(
-		Id(localVar).Op(":=").Add(zeroValues[t.Kind()].Clone()),
+		Var().Id(localVar).Add(basicTypeInfoMap[t.Kind()].Type.Clone()),
 	)
 	slot.define.Add(
 		If(input.Clone().Op("!=").Nil()).Block(
@@ -99,7 +92,7 @@ func (ctx *Ctx) flattenNamedBasic(t *types.Named, hint *string, ref bool, input 
 	ut := t.Underlying().(*types.Basic)
 
 	if !ref {
-		slot.assign.Add(typeCovertFunc[ut.Kind()].Clone().Call(input))
+		slot.assign.Add(basicTypeInfoMap[ut.Kind()].Type.Clone().Call(input))
 		return
 	}
 
@@ -110,11 +103,11 @@ func (ctx *Ctx) flattenNamedBasic(t *types.Named, hint *string, ref bool, input 
 
 	slot.assign.Add(Id(localVar))
 	slot.define.Add(
-		Id(localVar).Op(":=").Add(zeroValues[ut.Kind()].Clone()),
+		Var().Id(localVar).Add(basicTypeInfoMap[ut.Kind()].Type.Clone()),
 	)
 	slot.define.Add(
 		If(input.Clone().Op("!=").Nil()).Block(
-			Id(localVar).Op("=").Add(typeCovertFunc[ut.Kind()].Clone().Call(Op("*").Add(input))),
+			Id(localVar).Op("=").Add(basicTypeInfoMap[ut.Kind()].Type.Clone().Call(Op("*").Add(input))),
 		),
 	)
 }
@@ -492,7 +485,7 @@ func (ctx *Ctx) flattenNamedStruct(t *types.Named, hint *string, ref bool, input
 						assign: assignSlot,
 					},
 					input:    Id(_idInput).Dot(v.Name()),
-					localVar: strcase.ToLowerCamel(v.Name()),
+					localVar: newIdent(strcase.ToLowerCamel(v.Name())),
 				}
 				slotCtxList = append(slotCtxList, sctx)
 			}

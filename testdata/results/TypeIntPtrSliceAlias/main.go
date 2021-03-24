@@ -18,7 +18,7 @@ func expandTypeIntPtrSliceAlias(input []interface{}) types.TypeIntPtrSliceAlias 
 func flattenTypeIntPtrSliceAliasSlice(input types.TypeIntPtrSliceAlias) []interface{} {
 	output := make([]interface{}, 0)
 	for _, elem := range input {
-		e := 0
+		var e int
 		if elem != nil {
 			e = *elem
 		}

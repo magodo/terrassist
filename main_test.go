@@ -146,6 +146,9 @@ func TestAll(t *testing.T) {
 			typ:     "TypeCyclicRefStruct",
 			options: options{forPointer: true},
 		},
+		{
+			typ: "TypeNamedStructWithGoReservedWord",
+		},
 	}
 
 	for _, c := range cases {

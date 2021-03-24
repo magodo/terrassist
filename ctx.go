@@ -29,20 +29,123 @@ type Ctx struct {
 	options
 }
 
-// TODO: make this configurable
-var ptrUtils = map[string]*Statement{
-	"bool":    Qual("types/utils", "Bool"),
-	"int":     Qual("types/utils", "Int"),
-	"float64": Qual("types/utils", "Float64"),
-	"string":  Qual("types/utils", "String"),
+type basicTypeInfo struct {
+	PtrHelperFunc *Statement // TODO: make this configurable
+	Type          *Statement
 }
 
+var basicTypeInfoMap = map[types.BasicKind]basicTypeInfo{
+	types.Bool: {
+		PtrHelperFunc: Qual("types/utils", "Bool"),
+		Type:          Bool(),
+	},
+	types.Int: {
+		PtrHelperFunc: Qual("types/utils", "Int"),
+		Type:          Int(),
+	},
+	types.Int8: {
+		PtrHelperFunc: Qual("types/utils", "Int8"),
+		Type:          Int8(),
+	},
+	types.Int16: {
+		PtrHelperFunc: Qual("types/utils", "Int16"),
+		Type:          Int16(),
+	},
+	types.Int32: {
+		PtrHelperFunc: Qual("types/utils", "Int32"),
+		Type:          Int32(),
+	},
+	types.Int64: {
+		PtrHelperFunc: Qual("types/utils", "Int64"),
+		Type:          Int64(),
+	},
+	types.Uint: {
+		PtrHelperFunc: Qual("types/utils", "Uint"),
+		Type:          Uint(),
+	},
+	types.Uint8: {
+		PtrHelperFunc: Qual("types/utils", "Uint8"),
+		Type:          Uint8(),
+	},
+	types.Uint16: {
+		PtrHelperFunc: Qual("types/utils", "Uint16"),
+		Type:          Uint16(),
+	},
+	types.Uint32: {
+		PtrHelperFunc: Qual("types/utils", "Uint32"),
+		Type:          Uint32(),
+	},
+	types.Uint64: {
+		PtrHelperFunc: Qual("types/utils", "Uint64"),
+		Type:          Uint64(),
+	},
+	types.Float32: {
+		PtrHelperFunc: Qual("types/utils", "Float32"),
+		Type:          Float32(),
+	},
+	types.Float64: {
+		PtrHelperFunc: Qual("types/utils", "Float64"),
+		Type:          Float64(),
+	},
+	types.Complex64: {
+		PtrHelperFunc: Qual("types/utils", "Complex64"),
+		Type:          Complex64(),
+	},
+	types.Complex128: {
+		PtrHelperFunc: Qual("types/utils", "Complex128"),
+		Type:          Complex128(),
+	},
+	types.String: {
+		PtrHelperFunc: Qual("types/utils", "String"),
+		Type:          String(),
+	},
+}
+
+var reservedWordAlternatives = map[string]string{
+	"break":       "brk",
+	"default":     "dflt",
+	"func":        "fun",
+	"interface":   "itf",
+	"select":      "sel",
+	"case":        "cs",
+	"defer":       "df",
+	"go":          "g",
+	"map":         "m",
+	"struct":      "strct",
+	"chan":        "ch",
+	"else":        "eLse",
+	"goto":        "gt",
+	"package":     "pkg",
+	"switch":      "swtch",
+	"const":       "cst",
+	"fallthrough": "fth",
+	"if":          "iF",
+	"range":       "rng",
+	"type":        "typ",
+	"continue":    "cont",
+	"for":         "fOr",
+	"import":      "impt",
+	"return":      "ret",
+	"var":         "vAr",
+}
+
+// newIdent returns the input id, except the id is a Go reserved word, in which case we will use an alternative word instead.
+func newIdent(id string) string {
+	newid := reservedWordAlternatives[id]
+	if newid != "" {
+		return newid
+	}
+	return id
+}
+
+// qualifiedNamedType return the Qual() of the specified named type
 func qualifiedNamedType(t *types.Named) *Statement {
 	tPkgPath, tName := t.Obj().Pkg().Path(), t.Obj().Name()
 	return Qual(tPkgPath, tName)
 }
 
-
+// elemType type return the name of the element type of the input type, together with its *Statement representation, and a flag indicating the element is a pointer or not.
+// NOTE: currently it only supports element of named type, primary type or pointer of those types.
 func elemType(et types.Type) (name string, stmt *Statement, ref bool) {
 	if pt, ok := et.(*types.Pointer); ok {
 		ref = true

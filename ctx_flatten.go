@@ -30,6 +30,9 @@ func (ctx *Ctx) flattenType(t types.Type, varHint *string, ref bool, input *Stat
 		}
 		ctx.flattenBasic(t, varHint, ref, input, slot)
 	case *types.Pointer:
+		if ref == true {
+			log.Fatalf("Can't flatten pointer to pointer (%v)", t)
+		}
 		ctx.flattenType(t.Elem(), varHint, true, input, slot)
 	case *types.Slice:
 		ctx.flattenSlice(t, varHint, ref, input, slot)
@@ -51,6 +54,9 @@ func (ctx *Ctx) flattenNamedType(t *types.Named, varHint *string, ref bool, inpu
 		}
 		ctx.flattenNamedBasic(t, varHint, ref, input, slot)
 	case *types.Pointer:
+		if ref == true {
+			log.Fatalf("Can't flatten pointer to pointer (%v)", t)
+		}
 		ctx.flattenNamedPointer(t, varHint, ref, input, slot)
 	case *types.Slice:
 		ctx.flattenNamedSlice(t, varHint, ref, input, slot)
@@ -58,10 +64,8 @@ func (ctx *Ctx) flattenNamedType(t *types.Named, varHint *string, ref bool, inpu
 		ctx.flattenNamedMap(t, varHint, ref, input, slot)
 	case *types.Struct:
 		ctx.flattenNamedStruct(t, varHint, ref, input, slot)
-	case *types.Interface:
-		panic("TODO")
 	default:
-		// Array, Chan, Tuple, Signature
+		// Array, Chan, Tuple, Signature, Interface
 		return
 	}
 }

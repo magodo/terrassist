@@ -9,13 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestExpand(t *testing.T) {
+func TestAll(t *testing.T) {
 	pwd, _ := os.Getwd()
 	typesDir := filepath.Join(pwd, "testdata", "types")
 	resultBaseDir := filepath.Join(pwd, "testdata", "results")
 
 	cases := []struct {
-		typ string
+		typ     string
+		options options
 	}{
 		{
 			typ: "TypePrimaryCollection",
@@ -137,11 +138,19 @@ func TestExpand(t *testing.T) {
 		{
 			typ: "TypeNamedStructPtrAlias",
 		},
+		{
+			typ:     "TypeNamedStructWithJSONIgnore",
+			options: options{honorJSONIgnore: true},
+		},
+		{
+			typ:     "TypeCyclicRefStruct",
+			options: options{forPointer: true},
+		},
 	}
 
 	for _, c := range cases {
 		buf := bytes.NewBufferString("")
-		ctx := Ctx{existFuncs: map[string]bool{}}
+		ctx := Ctx{existFuncs: map[string]bool{}, options: c.options}
 		f := ctx.run(typesDir, "types", c.typ)
 		require.NoError(t, f.Render(buf), c.typ)
 

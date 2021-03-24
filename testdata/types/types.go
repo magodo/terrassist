@@ -236,3 +236,13 @@ type TypeNamedStructMapAlias map[string]TypeS1
 type TypeNamedStructAlias TypeS1
 
 type TypeNamedStructPtrAlias *TypeS1
+
+type TypeNamedStructWithJSONIgnore struct {
+	I       int    `json:"i"`
+	J       string `json:"j"`
+	Ignored int    `json:"-"`
+}
+
+type TypeCyclicRefStruct struct {
+	Self *TypeCyclicRefStruct
+}

@@ -1,9 +1,4 @@
 <p align="center">
-  <a href="https://opensource.org/licenses/MPL-2.0"
-    ><img
-      src="https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg"
-      alt="License: MPL 2.0"
-  /></a>
   <a href="https://github.com/magodo/terrassist/actions"
     ><img
       src="https://img.shields.io/github/workflow/status/magodo/terrassist/Provider?label=workflow&style=flat-square"

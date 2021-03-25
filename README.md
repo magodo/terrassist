@@ -45,7 +45,7 @@ go get github.com/magodo/terrassist
 
 ## Usage
 
-This tool is used to generate Go code that defines the Terraform Provider `flatten/expand` function for a particular Go type (e.g. a structure). Normally, the target type is defined in some SDK that your provider mainly depends on (e.g. terraform-providers/terraform-provider-azurerm depends on  azure/azure-sdk-for-go).
+This tool is used to generate Go code that defines the Terraform Provider `flatten/expand` function for a particular Go type (e.g. a structure). Normally, the target type is defined in some SDK that your provider mainly depends on (e.g. [terraform-providers/terraform-provider-azurerm](https://github.com/terraform-providers/terraform-provider-azurerm) depends on [Azure/azure-sdk-for-go](https://github.com/azure/azure-sdk-for-go)).
 
 To generate the code, users will need to run this tool under the provider codebase folder, where the codebase is technically a **Go module that has added the dependency towards the target SDK module**. Then follow the usage of this tool as below, to run the tool:
 
@@ -57,7 +57,7 @@ terrassist <pkg> <type>
 
 ## Example
 
-Under the cloned terraform-providers/terraform-provider-aws repository root folder, run:
+Under the cloned [terraform-providers/terraform-provider-aws](https://github.com/terraform-providers/terraform-provider-aws) repository root folder, run:
 
 ```
 terrassist github.com/aws/aws-sdk-go/service/elasticache CreateCacheParameterGroupInput

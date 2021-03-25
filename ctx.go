@@ -20,7 +20,6 @@ type Slot interface {
 
 type options struct {
 	honorJSONIgnore bool
-	forPointer      bool
 }
 
 type Ctx struct {
@@ -161,7 +160,7 @@ func elemType(et types.Type) (name string, stmt *Statement, ref bool) {
 	return
 }
 
-func (ctx *Ctx) run(dir string, pkgName string, typeName string) *File {
+func (ctx *Ctx) run(dir string, pkgName string, typeExpr string) *File {
 	thisPkgs, err := packages.Load(&packages.Config{Dir: dir})
 	if err != nil {
 		log.Fatal(err)
@@ -180,19 +179,23 @@ func (ctx *Ctx) run(dir string, pkgName string, typeName string) *File {
 	}
 	pkg := pkgs[0]
 
+	buildType, typeExpr := processTypeExpr(typeExpr)
+
 	var t types.Type
 	for _, obj := range pkg.TypesInfo.Defs {
-		if _, ok := obj.(*types.TypeName); ok && obj.Name() == typeName {
+		if _, ok := obj.(*types.TypeName); ok && obj.Name() == typeExpr {
 			t = obj.Type()
 			break
 		}
 	}
 	if t == nil {
-		log.Fatalf("no type named %q found in package %q", typeName, pkgName)
+		log.Fatalf("no type named %q found in package %q", typeExpr, pkgName)
 	}
 
+	t = buildType(t)
+
 	f := NewFile(thisPkg.Name)
-	ctx.expandType(t, nil, ctx.forPointer, nil, expandSlot{f: f})
-	ctx.flattenType(t, nil, ctx.forPointer, nil, flattenSlot{f: f})
+	ctx.expandType(t, nil, false, nil, expandSlot{f: f})
+	ctx.flattenType(t, nil, false, nil, flattenSlot{f: f})
 	return f
 }

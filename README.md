@@ -23,9 +23,24 @@ This tool is used to generate Go code that defines the Terraform Provider `flatt
 To generate the code, users will need to run this tool under the provider codebase folder, where the codebase is technically a **Go module that has added the dependency towards the target SDK module**. Then follow the usage of this tool as below, to run the tool:
 
 ```
-terrassist <pkg> <type>
+terrassist [options] <pkg> <type expression>
+
+Given a type "Foo", <type expression> can be one of:
+
+  - Foo
+  - *Foo
+  - map[string]Foo
+  - map[string]*Foo
+  - *map[string]Foo
+  - *map[string]*Foo
+  - []Foo
+  - []*Foo
+  - *[]Foo
+  - *[]*Foo
+
+Options:
+
   -j    Ignore struct field that has json tag "-" specified
-  -p    Whether to generate for the pointer of the specified type?
 ```
 
 ## Example

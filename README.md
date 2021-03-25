@@ -1,7 +1,3 @@
-# Important Disclaimer
-
-I am a Microsoft employee, but this is not an official Microsoft product nor an endorsed product. Purely a project for fun. 
-
 # Terrassist
 
 A small tool to assist Terraform Provider developers to generate `flatten/expand` functions.

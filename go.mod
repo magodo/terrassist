@@ -1,4 +1,4 @@
-module github.com/magodo/terialize
+module github.com/magodo/terrassist
 
 go 1.16
 

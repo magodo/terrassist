@@ -1,21 +1,3 @@
-<p align="center">
-  <a href="https://github.com/magodo/terrassist/actions"
-    ><img
-      src="https://img.shields.io/github/workflow/status/magodo/terrassist/Provider?label=workflow&style=flat-square"
-      alt="GitHub Actions workflow status"
-  /></a>
-  <a href="https://github.com/magodo/terrassist/releases"
-    ><img
-      src="https://img.shields.io/github/release/magodo/terrassist.svg?style=flat-square"
-      alt="Relase status"/></a
-  ><br />
-  <a href="https://twitter.com/magodo_"
-    ><img
-      src="https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2Fmagodo_"
-      alt="Follow me on Twitter"
-  /></a>
-</p>
-
 # Important Disclaimer
 
 I am a Microsoft employee, but this is not an official Microsoft product nor an endorsed product. Purely a project for fun. 

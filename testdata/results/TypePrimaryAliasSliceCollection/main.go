@@ -21,7 +21,7 @@ func expandBoolSlice(input []interface{}) []types.Bool {
 	}
 	output := make([]types.Bool, 0)
 	for _, elem := range input {
-		output = append(output, elem.(types.Bool))
+		output = append(output, types.Bool(elem.(bool)))
 	}
 	return output
 }
@@ -31,7 +31,7 @@ func expandIntSlice(input []interface{}) []types.Int {
 	}
 	output := make([]types.Int, 0)
 	for _, elem := range input {
-		output = append(output, elem.(types.Int))
+		output = append(output, types.Int(elem.(int)))
 	}
 	return output
 }
@@ -41,7 +41,7 @@ func expandStrSlice(input []interface{}) []types.Str {
 	}
 	output := make([]types.Str, 0)
 	for _, elem := range input {
-		output = append(output, elem.(types.Str))
+		output = append(output, types.Str(elem.(string)))
 	}
 	return output
 }
@@ -51,7 +51,7 @@ func expandFloatSlice(input []interface{}) []types.Float {
 	}
 	output := make([]types.Float, 0)
 	for _, elem := range input {
-		output = append(output, elem.(types.Float))
+		output = append(output, types.Float(elem.(float64)))
 	}
 	return output
 }

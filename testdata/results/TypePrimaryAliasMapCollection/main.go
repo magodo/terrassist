@@ -18,28 +18,28 @@ func expandTypePrimaryAliasMapCollection(input []interface{}) types.TypePrimaryA
 func expandBoolMap(input map[string]interface{}) map[string]types.Bool {
 	output := make(map[string]types.Bool)
 	for k, v := range input {
-		output[k] = v.(types.Bool)
+		output[k] = types.Bool(v.(bool))
 	}
 	return output
 }
 func expandIntMap(input map[string]interface{}) map[string]types.Int {
 	output := make(map[string]types.Int)
 	for k, v := range input {
-		output[k] = v.(types.Int)
+		output[k] = types.Int(v.(int))
 	}
 	return output
 }
 func expandStrMap(input map[string]interface{}) map[string]types.Str {
 	output := make(map[string]types.Str)
 	for k, v := range input {
-		output[k] = v.(types.Str)
+		output[k] = types.Str(v.(string))
 	}
 	return output
 }
 func expandFloatMap(input map[string]interface{}) map[string]types.Float {
 	output := make(map[string]types.Float)
 	for k, v := range input {
-		output[k] = v.(types.Float)
+		output[k] = types.Float(v.(float64))
 	}
 	return output
 }

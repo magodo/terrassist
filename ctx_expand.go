@@ -73,7 +73,7 @@ func (ctx *Ctx) expandBasic(t *types.Basic, varHint *string, ref bool, input *St
 }
 
 func (ctx *Ctx) expandNamedBasic(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
-	cs := input.Assert(qualifiedNamedType(t))
+	cs := qualifiedNamedType(t).Call(input.Assert(basicTypeInfoMap[t.Underlying().(*types.Basic).Kind()].Type))
 	if !ref {
 		slot.assign.Add(cs)
 		return

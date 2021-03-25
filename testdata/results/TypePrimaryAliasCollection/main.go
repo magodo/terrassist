@@ -8,10 +8,10 @@ func expandTypePrimaryAliasCollection(input []interface{}) types.TypePrimaryAlia
 	}
 	b := input[0].(map[string]interface{})
 	output := types.TypePrimaryAliasCollection{
-		Bool:  b["bool"].(types.Bool),
-		Float: b["float"].(types.Float),
-		Int:   b["int"].(types.Int),
-		Str:   b["str"].(types.Str),
+		Bool:  types.Bool(b["bool"].(bool)),
+		Float: types.Float(b["float"].(float64)),
+		Int:   types.Int(b["int"].(int)),
+		Str:   types.Str(b["str"].(string)),
 	}
 	return output
 }

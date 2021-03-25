@@ -21,7 +21,7 @@ func expandBoolPtrSlice(input []interface{}) []*types.Bool {
 	}
 	output := make([]*types.Bool, 0)
 	for _, elem := range input {
-		e := elem.(types.Bool)
+		e := types.Bool(elem.(bool))
 		output = append(output, &e)
 	}
 	return output
@@ -32,7 +32,7 @@ func expandIntPtrSlice(input []interface{}) []*types.Int {
 	}
 	output := make([]*types.Int, 0)
 	for _, elem := range input {
-		e := elem.(types.Int)
+		e := types.Int(elem.(int))
 		output = append(output, &e)
 	}
 	return output
@@ -43,7 +43,7 @@ func expandStrPtrSlice(input []interface{}) []*types.Str {
 	}
 	output := make([]*types.Str, 0)
 	for _, elem := range input {
-		e := elem.(types.Str)
+		e := types.Str(elem.(string))
 		output = append(output, &e)
 	}
 	return output
@@ -54,7 +54,7 @@ func expandFloatPtrSlice(input []interface{}) []*types.Float {
 	}
 	output := make([]*types.Float, 0)
 	for _, elem := range input {
-		e := elem.(types.Float)
+		e := types.Float(elem.(float64))
 		output = append(output, &e)
 	}
 	return output

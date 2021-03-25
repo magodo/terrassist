@@ -18,7 +18,7 @@ func expandTypePrimaryAliasPtrMapCollection(input []interface{}) types.TypePrima
 func expandBoolPtrMap(input map[string]interface{}) map[string]*types.Bool {
 	output := make(map[string]*types.Bool)
 	for k, v := range input {
-		e := v.(types.Bool)
+		e := types.Bool(v.(bool))
 		output[k] = &e
 	}
 	return output
@@ -26,7 +26,7 @@ func expandBoolPtrMap(input map[string]interface{}) map[string]*types.Bool {
 func expandIntPtrMap(input map[string]interface{}) map[string]*types.Int {
 	output := make(map[string]*types.Int)
 	for k, v := range input {
-		e := v.(types.Int)
+		e := types.Int(v.(int))
 		output[k] = &e
 	}
 	return output
@@ -34,7 +34,7 @@ func expandIntPtrMap(input map[string]interface{}) map[string]*types.Int {
 func expandStrPtrMap(input map[string]interface{}) map[string]*types.Str {
 	output := make(map[string]*types.Str)
 	for k, v := range input {
-		e := v.(types.Str)
+		e := types.Str(v.(string))
 		output[k] = &e
 	}
 	return output
@@ -42,7 +42,7 @@ func expandStrPtrMap(input map[string]interface{}) map[string]*types.Str {
 func expandFloatPtrMap(input map[string]interface{}) map[string]*types.Float {
 	output := make(map[string]*types.Float)
 	for k, v := range input {
-		e := v.(types.Float)
+		e := types.Float(v.(float64))
 		output[k] = &e
 	}
 	return output

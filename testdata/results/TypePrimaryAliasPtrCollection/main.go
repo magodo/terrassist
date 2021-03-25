@@ -7,10 +7,10 @@ func expandTypePrimaryAliasPtrCollection(input []interface{}) types.TypePrimaryA
 		return types.TypePrimaryAliasPtrCollection{}
 	}
 	b := input[0].(map[string]interface{})
-	ptrBool := b["ptr_bool"].(types.Bool)
-	ptrInt := b["ptr_int"].(types.Int)
-	ptrStr := b["ptr_str"].(types.Str)
-	ptrFloat := b["ptr_float"].(types.Float)
+	ptrBool := types.Bool(b["ptr_bool"].(bool))
+	ptrInt := types.Int(b["ptr_int"].(int))
+	ptrStr := types.Str(b["ptr_str"].(string))
+	ptrFloat := types.Float(b["ptr_float"].(float64))
 	output := types.TypePrimaryAliasPtrCollection{
 		PtrBool:  &ptrBool,
 		PtrFloat: &ptrFloat,

@@ -8,7 +8,7 @@ func expandTypeNamedBoolSliceAlias(input []interface{}) types.TypeNamedBoolSlice
 	}
 	output := make(types.TypeNamedBoolSliceAlias, 0)
 	for _, elem := range input {
-		output = append(output, elem.(types.Bool))
+		output = append(output, types.Bool(elem.(bool)))
 	}
 	return output
 }

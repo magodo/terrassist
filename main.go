@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-const usage = "terialize <pkg> <type>"
+const usage = "terrassist <pkg> <type>"
 
 func main() {
 	forPointer := flag.Bool("p", false, `Whether to generate for the pointer of the specified type?`)

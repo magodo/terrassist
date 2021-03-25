@@ -7,10 +7,25 @@ import (
 	"os"
 )
 
-const usage = "terrassist <pkg> <type>"
+const usage = `terrassist [options] <pkg> <type expression>
+
+Given a type "Foo", <type expression> can be one of:
+
+  - Foo
+  - *Foo
+  - map[string]Foo
+  - map[string]*Foo
+  - *map[string]Foo
+  - *map[string]*Foo
+  - []Foo
+  - []*Foo
+  - *[]Foo
+  - *[]*Foo
+
+Options:
+`
 
 func main() {
-	forPointer := flag.Bool("p", false, `Whether to generate for the pointer of the specified type?`)
 	honorJSONIgnore := flag.Bool("j", false, `Ignore struct field that has json tag "-" specified`)
 
 	flag.Usage = func() {
@@ -30,7 +45,6 @@ func main() {
 		existFuncs: map[string]bool{},
 		options: options{
 			honorJSONIgnore: *honorJSONIgnore,
-			forPointer:      *forPointer,
 		},
 	}
 	f := ctx.run(".", pkgName, typeName)

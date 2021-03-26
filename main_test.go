@@ -143,7 +143,7 @@ func TestAll(t *testing.T) {
 			options: options{honorJSONIgnore: true},
 		},
 		{
-			typ: "*TypeCyclicRefStruct",
+			typ: "TypeCyclicRefStruct",
 		},
 		{
 			typ: "TypeNamedStructWithGoReservedWord",

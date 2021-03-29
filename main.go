@@ -45,7 +45,10 @@ func main() {
 		Dir:      ".",
 		PkgName:  pkgName,
 		TypeExpr: typeName,
-	}, flags{honorJSONIgnore: *honorJSONIgnore})
+		Flags: Flags{
+			HonorJSONIgnore: *honorJSONIgnore,
+		},
+	})
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	. "github.com/dave/jennifer/jen"
 	"go/types"
-	"golang.org/x/tools/go/packages"
 	"log"
+	"sort"
 	"strings"
+
+	. "github.com/dave/jennifer/jen"
+	"golang.org/x/tools/go/packages"
 )
 
 const _idEncloseBlock = "b"
@@ -19,22 +21,69 @@ type Slot interface {
 	Add(code ...Code) *Statement
 }
 
-type flags struct {
-	honorJSONIgnore bool
+type Flags struct {
+	HonorJSONIgnore bool
 }
 
 type CtxOptions struct {
 	Dir      string
 	PkgName  string
 	TypeExpr string
+
+	Flags
 }
 
 type Ctx struct {
-	flags
-	thisPkg    *packages.Package
-	targetPkg  *packages.Package
+	thisPkg   *packages.Package
+	targetPkg *packages.Package
+	t         types.Type
+
 	existFuncs map[string]bool
-	t          types.Type
+
+	honorJSONIgnore bool
+}
+
+func NewCtx(opts CtxOptions) (*Ctx, error) {
+	thisPkgs, err := packages.Load(&packages.Config{Dir: opts.Dir})
+	if err != nil {
+		return nil, err
+	}
+	if err := packagesErrors(thisPkgs); err != nil {
+		return nil, err
+	}
+	thisPkg := thisPkgs[0]
+
+	pkgs, err := packages.Load(&packages.Config{Dir: opts.Dir, Mode: packages.LoadSyntax}, opts.PkgName)
+	if err != nil {
+		return nil, err
+	}
+	if err := packagesErrors(thisPkgs); err != nil {
+		return nil, err
+	}
+	pkg := pkgs[0]
+
+	buildType, typeName := processTypeExpr(opts.TypeExpr)
+
+	var t types.Type
+	for _, obj := range pkg.TypesInfo.Defs {
+		if _, ok := obj.(*types.TypeName); ok && obj.Name() == typeName {
+			t = obj.Type()
+			break
+		}
+	}
+	if t == nil {
+		return nil, fmt.Errorf("no type named %q found in package %q", typeName, opts.PkgName)
+	}
+
+	t = buildType(t)
+
+	return &Ctx{
+		thisPkg:         thisPkg,
+		targetPkg:       pkg,
+		t:               t,
+		existFuncs:      map[string]bool{},
+		honorJSONIgnore: opts.HonorJSONIgnore,
+	}, nil
 }
 
 type basicTypeInfo struct {
@@ -170,6 +219,37 @@ func elemType(et types.Type) (name string, stmt *Statement, ref bool) {
 	return
 }
 
+func (ctx *Ctx) findInterfaceImplementers(ut *types.Interface) []types.Type {
+	implM := map[string]types.Type{}
+	var implObjNames []string
+	for _, obj := range ctx.targetPkg.TypesInfo.Defs {
+		if _, ok := obj.(*types.TypeName); !ok {
+			continue
+		}
+		if types.Implements(obj.Type(), ut) {
+			implM[obj.Name()] = obj.Type()
+			implObjNames = append(implObjNames, obj.Name())
+			continue
+		}
+
+		ptr := types.NewPointer(obj.Type())
+		if types.Implements(ptr, ut) {
+			name := obj.Name() + "Ptr"
+			implM[name] = ptr
+			implObjNames = append(implObjNames, name)
+			continue
+		}
+	}
+	sort.Strings(implObjNames)
+
+	out := []types.Type{}
+	for _, name := range implObjNames {
+		out = append(out, implM[name])
+	}
+
+	return out
+}
+
 func (ctx *Ctx) run() *File {
 	f := NewFile(ctx.thisPkg.Name)
 	ctx.expandType(ctx.t, nil, false, nil, expandSlot{f: f})
@@ -191,47 +271,4 @@ func packagesErrors(pkgs []*packages.Package) error {
 
 	tpl := strings.Repeat("%w\n", len(errors))
 	return fmt.Errorf(tpl, errors...)
-}
-
-func NewCtx(opts CtxOptions, flags flags) (*Ctx, error) {
-	thisPkgs, err := packages.Load(&packages.Config{Dir: opts.Dir})
-	if err != nil {
-		return nil, err
-	}
-	if err := packagesErrors(thisPkgs); err != nil {
-		return nil, err
-	}
-	thisPkg := thisPkgs[0]
-
-	pkgs, err := packages.Load(&packages.Config{Dir: opts.Dir, Mode: packages.LoadSyntax}, opts.PkgName)
-	if err != nil {
-		return nil, err
-	}
-	if err := packagesErrors(thisPkgs); err != nil {
-		return nil, err
-	}
-	pkg := pkgs[0]
-
-	buildType, typeExpr := processTypeExpr(opts.TypeExpr)
-
-	var t types.Type
-	for _, obj := range pkg.TypesInfo.Defs {
-		if _, ok := obj.(*types.TypeName); ok && obj.Name() == typeExpr {
-			t = obj.Type()
-			break
-		}
-	}
-	if t == nil {
-		return nil, fmt.Errorf("no type named %q found in package %q", typeExpr, opts.PkgName)
-	}
-
-	t = buildType(t)
-
-	return &Ctx{
-		flags:      flags,
-		thisPkg:    thisPkg,
-		targetPkg:  pkg,
-		existFuncs: map[string]bool{},
-		t:          t,
-	}, nil
 }

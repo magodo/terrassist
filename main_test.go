@@ -15,8 +15,8 @@ func TestAll(t *testing.T) {
 	resultBaseDir := filepath.Join(pwd, "testdata", "results")
 
 	cases := []struct {
-		typ     string
-		options flags
+		typ   string
+		flags Flags
 	}{
 		{
 			typ: "TypePrimaryCollection",
@@ -139,8 +139,8 @@ func TestAll(t *testing.T) {
 			typ: "TypeNamedStructPtrAlias",
 		},
 		{
-			typ:     "TypeNamedStructWithJSONIgnore",
-			options: flags{honorJSONIgnore: true},
+			typ:   "TypeNamedStructWithJSONIgnore",
+			flags: Flags{HonorJSONIgnore: true},
 		},
 		{
 			typ: "TypeCyclicRefStruct",
@@ -148,12 +148,22 @@ func TestAll(t *testing.T) {
 		{
 			typ: "TypeNamedStructWithGoReservedWord",
 		},
+		{
+			typ: "TypeNamedInterface",
+		},
 	}
 
 	for _, c := range cases {
 		buf := bytes.NewBufferString("")
-		ctx := Ctx{existFuncs: map[string]bool{}, flags: c.options}
-		f := ctx.run(typesDir, "types", c.typ)
+		ctx, err := NewCtx(CtxOptions{
+			Dir:      typesDir,
+			PkgName:  "types",
+			TypeExpr: c.typ,
+			Flags:    c.flags,
+		})
+		require.NoError(t, err, c.typ)
+
+		f := ctx.run()
 		require.NoError(t, f.Render(buf), c.typ)
 
 		expectFile := filepath.Join(resultBaseDir, c.typ, "main.go")

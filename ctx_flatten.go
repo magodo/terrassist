@@ -64,8 +64,10 @@ func (ctx *Ctx) flattenNamedType(t *types.Named, varHint *string, ref bool, inpu
 		ctx.flattenNamedMap(t, varHint, ref, input, slot)
 	case *types.Struct:
 		ctx.flattenNamedStruct(t, varHint, ref, input, slot)
+	case *types.Interface:
+		ctx.flattenNamedInterface(t, varHint, ref, input, slot)
 	default:
-		// Array, Chan, Tuple, Signature, Interface
+		// Array, Chan, Tuple, Signature
 		return
 	}
 }
@@ -505,5 +507,48 @@ func (ctx *Ctx) flattenNamedStruct(t *types.Named, hint *string, ref bool, input
 					}
 				})),
 			))
+		})
+}
+
+func (ctx *Ctx) flattenNamedInterface(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot) {
+	flattenFuncName := fmt.Sprintf("flatten%s", strcase.ToCamel(t.Obj().Name()))
+	if ref {
+		flattenFuncName += "Ptr"
+	}
+
+	if ctx.existFuncs[flattenFuncName] {
+		return
+	}
+	ctx.existFuncs[flattenFuncName] = true
+
+	// Fill in the assign slot of the invoker.
+	if slot.assign != nil {
+		slot.assign.Add(Id(flattenFuncName).Call(input))
+	}
+
+	// Loop over the types that is defined in this package that implement this interface and generate flatten function for them.
+	ut := t.Underlying().(*types.Interface)
+	for _, implT := range ctx.findInterfaceImplementers(ut) {
+		newSlot := flattenSlot{
+			f:      slot.f,
+			define: nil,
+			assign: nil,
+		}
+		ctx.flattenType(implT, hint, ref, input, newSlot)
+	}
+
+	// Create a flatten function for the given type
+	slot.f.Func().Id(flattenFuncName).Params(
+		Id(_idInput).Do(func(stmt *Statement) {
+			if ref {
+				stmt.Op("*")
+			}
+		}).Add(qualifiedNamedType(t)),
+	).Index().Interface().
+
+		// Function block
+		BlockFunc(func(g *Group) {
+			g.Comment("TODO")
+			g.Return(Nil())
 		})
 }

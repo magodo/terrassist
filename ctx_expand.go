@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
+	. "github.com/dave/jennifer/jen"
+	"github.com/iancoleman/strcase"
 	"go/types"
 	"log"
 	"reflect"
-
-	. "github.com/dave/jennifer/jen"
-	"github.com/iancoleman/strcase"
 )
 
 type expandSlot struct {
@@ -58,8 +57,10 @@ func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input
 		ctx.expandNamedMap(t, varHint, ref, input, slot)
 	case *types.Struct:
 		ctx.expandNamedStruct(t, varHint, ref, input, slot)
+	case *types.Interface:
+		ctx.expandNamedInterface(t, varHint, ref, input, slot)
 	default:
-		// Array, Chan, Tuple, Signature, Interface
+		// Array, Chan, Tuple, Signature
 		return
 	}
 }
@@ -477,3 +478,48 @@ func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, inp
 			g.Return(Id(_idOutput))
 		})
 }
+
+func (ctx *Ctx) expandNamedInterface(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
+	if ref {
+		expandFuncName += "Ptr"
+	}
+
+	// Create an expand function for the given type
+	if ctx.existFuncs[expandFuncName] {
+		return
+	}
+	ctx.existFuncs[expandFuncName] = true
+
+	// Fill in the assign slot of the invoker.
+	if slot.assign != nil {
+		slot.assign.Add(Id(expandFuncName).Call(input.Assert(Index().Interface())))
+	}
+
+	// Loop over the types that is defined in this package that implement this interface and generate expand function for them.
+	ut := t.Underlying().(*types.Interface)
+
+	for _, implT := range ctx.findInterfaceImplementers(ut) {
+		newSlot := expandSlot{
+			f:      slot.f,
+			define: nil,
+			assign: nil,
+		}
+		ctx.expandType(implT, hint, ref, input, newSlot)
+	}
+
+	slot.f.Func().Id(expandFuncName).Params(
+		Id(_idInput).Index().Interface(),
+	).Do(func(stmt *Statement) {
+		if ref {
+			stmt.Op("*")
+		}
+	}).Add(qualifiedNamedType(t)).
+
+		// Function block
+		BlockFunc(func(g *Group) {
+			g.Comment("TODO")
+			g.Return(Nil())
+		})
+}
+

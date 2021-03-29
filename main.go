@@ -41,13 +41,18 @@ func main() {
 
 	pkgName, typeName := flag.Args()[0], flag.Args()[1]
 
-	ctx := Ctx{
-		existFuncs: map[string]bool{},
-		options: options{
-			honorJSONIgnore: *honorJSONIgnore,
+	ctx, err := NewCtx(CtxOptions{
+		Dir:      ".",
+		PkgName:  pkgName,
+		TypeExpr: typeName,
+		Flags: Flags{
+			HonorJSONIgnore: *honorJSONIgnore,
 		},
+	})
+	if err != nil {
+		log.Fatal(err)
 	}
-	f := ctx.run(".", pkgName, typeName)
+	f := ctx.run()
 
 	if err := f.Render(os.Stdout); err != nil {
 		log.Fatalf("failed to render: %v", err)

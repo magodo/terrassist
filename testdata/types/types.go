@@ -251,3 +251,9 @@ type TypeNamedStructWithGoReservedWord struct {
 	Go *string
 	If *string
 }
+
+type TypeNamedInterface interface{ Foo() }
+
+func (s TypeS1) Foo() {}
+
+func (s *TypeS2) Foo() {}

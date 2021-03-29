@@ -58,6 +58,8 @@ func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input
 		ctx.expandNamedMap(t, varHint, ref, input, slot)
 	case *types.Struct:
 		ctx.expandNamedStruct(t, varHint, ref, input, slot)
+	case *types.Interface:
+		ctx.expandNamedInterface(t, varHint, ref, input, slot)
 	default:
 		// Array, Chan, Tuple, Signature, Interface
 		return
@@ -475,5 +477,109 @@ func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, inp
 				}
 			}))
 			g.Return(Id(_idOutput))
+		})
+}
+
+func (ctx *Ctx) expandNamedInterface(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
+	if ref {
+		expandFuncName += "Ptr"
+	}
+
+	// Fill in the assign slot of the invoker.
+	if slot.assign != nil {
+		slot.assign.Add(Id(expandFuncName).Call(input.Assert(Index().Interface())))
+	}
+
+	// Create an expand function for the given type
+	if ctx.existFuncs[expandFuncName] {
+		return
+	}
+	ctx.existFuncs[expandFuncName] = true
+	slot.f.Func().Id(expandFuncName).Params(
+		Id(_idInput).Index().Interface(),
+	).Do(func(stmt *Statement) {
+		if ref {
+			stmt.Op("*")
+		}
+	}).Add(qualifiedNamedType(t)).
+
+		// Function block
+		BlockFunc(func(g *Group) {
+			// Nil check on the input, e.g.:
+			//
+			// if len(input == 0 || input[0] == nil) {
+			//     return foo.TypeFoo{}
+			// }
+			g.If(Len(Id(_idInput)).Op("==").Lit(0).Op("||").Id(_idInput).Index(Lit(0)).Op("==").Nil()).BlockFunc(func(g *Group) {
+				if ref {
+					g.Return(Nil())
+				} else {
+					g.Return(qualifiedNamedType(t).Values())
+				}
+			})
+
+			// Get the nested block map, e.g.:
+			//
+			// b := input[0].(map[string]interface{})
+			g.Id(_idEncloseBlock).Op(":=").Id(_idInput).Index(Lit(0)).Assert(Map(String()).Interface())
+
+			// Loop over the types that implement this interface and get their "slots"
+			type slotCtx struct {
+				t        types.Type
+				slot     expandSlot
+				input    *Statement
+				localVar string
+			}
+
+			var slotCtxList []slotCtx
+
+			var assignSlots []*Statement
+			t.Obj().Pkg().Scope().
+			t.Underlying().(*types.Interface)
+			ut := t.Underlying().(*types.Struct)
+			for i := 0; i < ut.NumFields(); i++ {
+				v := ut.Field(i)
+				if !v.Exported() {
+					continue
+				}
+
+				if ctx.honorJSONIgnore {
+					if reflect.StructTag(ut.Tag(i)).Get("json") == "-" {
+						continue
+					}
+				}
+
+				defineSlot := g
+				assignSlot := &Statement{}
+				assignSlots = append(assignSlots, assignSlot)
+				sctx := slotCtx{
+					field: v,
+					slot: expandSlot{
+						f:      slot.f,
+						define: defineSlot,
+						assign: assignSlot,
+					},
+					input:    Id(_idEncloseBlock).Index(Lit(strcase.ToSnake(v.Name()))),
+					localVar: newIdent(strcase.ToLowerCamel(v.Name())),
+				}
+				slotCtxList = append(slotCtxList, sctx)
+			}
+
+			for _, sctx := range slotCtxList {
+				ctx.expandType(sctx.field.Type(), &sctx.localVar, false, sctx.input, sctx.slot)
+			}
+
+			g.Id(_idOutput).Op(":=").Do(func(stmt *Statement) {
+				if ref {
+					stmt.Op("&")
+				}
+			}).Add(qualifiedNamedType(t)).Values(DictFunc(func(d Dict) {
+				for idx, sctx := range slotCtxList {
+					d[Id(sctx.field.Name())] = assignSlots[idx]
+				}
+			}))
+			g.Return(Id(_idOutput))
+
 		})
 }

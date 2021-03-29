@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	. "github.com/dave/jennifer/jen"
 	"go/types"
 	"golang.org/x/tools/go/packages"
 	"log"
-	"os"
+	"strings"
 )
 
 const _idEncloseBlock = "b"
@@ -18,13 +19,22 @@ type Slot interface {
 	Add(code ...Code) *Statement
 }
 
-type options struct {
+type flags struct {
 	honorJSONIgnore bool
 }
 
+type CtxOptions struct {
+	Dir      string
+	PkgName  string
+	TypeExpr string
+}
+
 type Ctx struct {
+	flags
+	thisPkg    *packages.Package
+	targetPkg  *packages.Package
 	existFuncs map[string]bool
-	options
+	t          types.Type
 }
 
 type basicTypeInfo struct {
@@ -160,26 +170,49 @@ func elemType(et types.Type) (name string, stmt *Statement, ref bool) {
 	return
 }
 
-func (ctx *Ctx) run(dir string, pkgName string, typeExpr string) *File {
-	thisPkgs, err := packages.Load(&packages.Config{Dir: dir})
-	if err != nil {
-		log.Fatal(err)
+func (ctx *Ctx) run() *File {
+	f := NewFile(ctx.thisPkg.Name)
+	ctx.expandType(ctx.t, nil, false, nil, expandSlot{f: f})
+	ctx.flattenType(ctx.t, nil, false, nil, flattenSlot{f: f})
+	return f
+}
+
+func packagesErrors(pkgs []*packages.Package) error {
+	errors := []interface{}{}
+	packages.Visit(pkgs, nil, func(pkg *packages.Package) {
+		for _, err := range pkg.Errors {
+			errors = append(errors, err)
+		}
+	})
+
+	if len(errors) == 0 {
+		return nil
 	}
-	if packages.PrintErrors(thisPkgs) > 0 {
-		os.Exit(1)
+
+	tpl := strings.Repeat("%w\n", len(errors))
+	return fmt.Errorf(tpl, errors...)
+}
+
+func NewCtx(opts CtxOptions, flags flags) (*Ctx, error) {
+	thisPkgs, err := packages.Load(&packages.Config{Dir: opts.Dir})
+	if err != nil {
+		return nil, err
+	}
+	if err := packagesErrors(thisPkgs); err != nil {
+		return nil, err
 	}
 	thisPkg := thisPkgs[0]
 
-	pkgs, err := packages.Load(&packages.Config{Dir: dir, Mode: packages.LoadSyntax}, pkgName)
+	pkgs, err := packages.Load(&packages.Config{Dir: opts.Dir, Mode: packages.LoadSyntax}, opts.PkgName)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	if packages.PrintErrors(pkgs) > 0 {
-		os.Exit(1)
+	if err := packagesErrors(thisPkgs); err != nil {
+		return nil, err
 	}
 	pkg := pkgs[0]
 
-	buildType, typeExpr := processTypeExpr(typeExpr)
+	buildType, typeExpr := processTypeExpr(opts.TypeExpr)
 
 	var t types.Type
 	for _, obj := range pkg.TypesInfo.Defs {
@@ -189,13 +222,16 @@ func (ctx *Ctx) run(dir string, pkgName string, typeExpr string) *File {
 		}
 	}
 	if t == nil {
-		log.Fatalf("no type named %q found in package %q", typeExpr, pkgName)
+		return nil, fmt.Errorf("no type named %q found in package %q", typeExpr, opts.PkgName)
 	}
 
 	t = buildType(t)
 
-	f := NewFile(thisPkg.Name)
-	ctx.expandType(t, nil, false, nil, expandSlot{f: f})
-	ctx.flattenType(t, nil, false, nil, flattenSlot{f: f})
-	return f
+	return &Ctx{
+		flags:      flags,
+		thisPkg:    thisPkg,
+		targetPkg:  pkg,
+		existFuncs: map[string]bool{},
+		t:          t,
+	}, nil
 }

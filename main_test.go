@@ -16,7 +16,7 @@ func TestAll(t *testing.T) {
 
 	cases := []struct {
 		typ     string
-		options options
+		options flags
 	}{
 		{
 			typ: "TypePrimaryCollection",
@@ -140,7 +140,7 @@ func TestAll(t *testing.T) {
 		},
 		{
 			typ:     "TypeNamedStructWithJSONIgnore",
-			options: options{honorJSONIgnore: true},
+			options: flags{honorJSONIgnore: true},
 		},
 		{
 			typ: "TypeCyclicRefStruct",
@@ -152,7 +152,7 @@ func TestAll(t *testing.T) {
 
 	for _, c := range cases {
 		buf := bytes.NewBufferString("")
-		ctx := Ctx{existFuncs: map[string]bool{}, options: c.options}
+		ctx := Ctx{existFuncs: map[string]bool{}, flags: c.options}
 		f := ctx.run(typesDir, "types", c.typ)
 		require.NoError(t, f.Render(buf), c.typ)
 

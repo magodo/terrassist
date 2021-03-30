@@ -15,8 +15,9 @@ func TestAll(t *testing.T) {
 	resultBaseDir := filepath.Join(pwd, "testdata", "results")
 
 	cases := []struct {
-		typ   string
-		flags Flags
+		typ          string
+		expectFolder string
+		flags        Flags
 	}{
 		{
 			typ: "TypePrimaryCollection",
@@ -151,6 +152,18 @@ func TestAll(t *testing.T) {
 		{
 			typ: "TypeNamedInterface",
 		},
+		{
+			typ:          "[]TypeS1",
+			expectFolder: "TypeS1_Slice",
+		},
+		{
+			typ: "[]TypePrimaryPtrCollection",
+			expectFolder: "TypePrimaryPtrCollection_Slice",
+		},
+		{
+			typ: "[]TypeNamedStructCollection",
+			expectFolder: "TypeNamedStructCollection_Slice",
+		},
 	}
 
 	for _, c := range cases {
@@ -166,7 +179,11 @@ func TestAll(t *testing.T) {
 		f := ctx.run()
 		require.NoError(t, f.Render(buf), c.typ)
 
-		expectFile := filepath.Join(resultBaseDir, c.typ, "main.go")
+		expectFolder := c.expectFolder
+		if expectFolder == "" {
+			expectFolder = c.typ
+		}
+		expectFile := filepath.Join(resultBaseDir, expectFolder, "main.go")
 		expectByte, _ := os.ReadFile(expectFile)
 		require.Equal(t, string(expectByte), buf.String(), c.typ)
 	}

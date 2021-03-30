@@ -15,7 +15,7 @@ type expandSlot struct {
 	assign Slot
 }
 
-func (ctx *Ctx) expandType(t types.Type, varHint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandType(t types.Type, varHint *string, ref bool, input *Statement, slot expandSlot, inSlice bool) {
 	switch t := t.(type) {
 	case *types.Basic:
 		if input == nil {
@@ -26,20 +26,20 @@ func (ctx *Ctx) expandType(t types.Type, varHint *string, ref bool, input *State
 		if ref == true {
 			log.Fatalf("Can't expand pointer to pointer (%v)", t)
 		}
-		ctx.expandType(t.Elem(), varHint, true, input, slot)
+		ctx.expandType(t.Elem(), varHint, true, input, slot, inSlice)
 	case *types.Slice:
 		ctx.expandSlice(t, varHint, ref, input, slot)
 	case *types.Map:
 		ctx.expandMap(t, varHint, ref, input, slot)
 	case *types.Named:
-		ctx.expandNamedType(t, varHint, ref, input, slot)
+		ctx.expandNamedType(t, varHint, ref, input, slot, inSlice)
 	default:
 		// Ignore: Array, Chan, Tuple, Signature, Struct, Interface
 		return
 	}
 }
 
-func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot, inSlice bool) {
 	switch t.Underlying().(type) {
 	case *types.Basic:
 		if input == nil {
@@ -50,13 +50,13 @@ func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input
 		if ref == true {
 			log.Fatalf("Can't expand pointer to pointer (%v)", t)
 		}
-		ctx.expandNamedPointer(t, varHint, ref, input, slot)
+		ctx.expandNamedPointer(t, varHint, ref, input, slot, inSlice)
 	case *types.Slice:
 		ctx.expandNamedSlice(t, varHint, ref, input, slot)
 	case *types.Map:
 		ctx.expandNamedMap(t, varHint, ref, input, slot)
 	case *types.Struct:
-		ctx.expandNamedStruct(t, varHint, ref, input, slot)
+		ctx.expandNamedStruct(t, varHint, ref, input, slot, inSlice)
 	case *types.Interface:
 		ctx.expandNamedInterface(t, varHint, ref, input, slot)
 	default:
@@ -89,9 +89,9 @@ func (ctx *Ctx) expandNamedBasic(t *types.Named, varHint *string, ref bool, inpu
 	slot.assign.Add(Op("&").Id(localVar))
 }
 
-func (ctx *Ctx) expandNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot, inSlice bool) {
 	if input == nil {
-		ctx.expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, nil, slot)
+		ctx.expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, nil, slot, inSlice)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (ctx *Ctx) expandNamedPointer(t *types.Named, hint *string, ref bool, input
 		define: slot.define,
 		assign: assignSlot,
 	}
-	ctx.expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, input, newSlot)
+	ctx.expandType(t.Underlying().(*types.Pointer).Elem(), hint, true, input, newSlot, inSlice)
 	slot.assign.Add(qualifiedNamedType(t).Call(assignSlot))
 }
 
@@ -163,7 +163,7 @@ func (ctx *Ctx) expandSlice(t *types.Slice, varHint *string, ref bool, input *St
 			}
 
 			localVar := _idLocalVar
-			ctx.expandType(t.Elem(), &localVar, false, Id(_idSliceElem), newSlot)
+			ctx.expandType(t.Elem(), &localVar, false, Id(_idSliceElem), newSlot, true)
 
 			g.For(List(Id("_"), Id(_idSliceElem)).Op(":=").Range().Id(_idInput)).Block(
 				defineSlot,
@@ -228,7 +228,7 @@ func (ctx *Ctx) expandNamedSlice(t *types.Named, hint *string, ref bool, input *
 			}
 
 			localVar := _idLocalVar
-			ctx.expandType(t.Underlying().(*types.Slice).Elem(), &localVar, false, Id(_idSliceElem), newSlot)
+			ctx.expandType(t.Underlying().(*types.Slice).Elem(), &localVar, false, Id(_idSliceElem), newSlot, true)
 
 			g.For(List(Id("_"), Id(_idSliceElem)).Op(":=").Range().Id(_idInput)).Block(
 				defineSlot,
@@ -299,7 +299,7 @@ func (ctx *Ctx) expandMap(t *types.Map, hint *string, ref bool, input *Statement
 			}
 
 			localVar := _idLocalVar
-			ctx.expandType(t.Elem(), &localVar, false, Id("v"), newSlot)
+			ctx.expandType(t.Elem(), &localVar, false, Id("v"), newSlot, false)
 
 			g.For(List(Id("k"), Id("v")).Op(":=").Range().Id(_idInput)).Block(
 				defineSlot,
@@ -362,7 +362,7 @@ func (ctx *Ctx) expandNamedMap(t *types.Named, hint *string, ref bool, input *St
 			}
 
 			localVar := _idLocalVar
-			ctx.expandType(ut.Elem(), &localVar, false, Id("v"), newSlot)
+			ctx.expandType(ut.Elem(), &localVar, false, Id("v"), newSlot, false)
 
 			g.For(List(Id("k"), Id("v")).Op(":=").Range().Id(_idInput)).Block(
 				defineSlot,
@@ -377,13 +377,20 @@ func (ctx *Ctx) expandNamedMap(t *types.Named, hint *string, ref bool, input *St
 		})
 }
 
-func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
+func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot, inSlice bool) {
+	if inSlice {
+		ctx.expandNamedStructN(t, varHint, ref, input, slot)
+		return
+	}
+	ctx.expandNamedStruct1(t, varHint, ref, input, slot)
+}
+
+func (ctx *Ctx) expandNamedStruct1(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
 	expandFuncName := fmt.Sprintf("expand%s", strcase.ToCamel(t.Obj().Name()))
 	if ref {
 		expandFuncName += "Ptr"
 	}
 
-	// Fill in the assign slot of the invoker.
 	if slot.assign != nil {
 		slot.assign.Add(Id(expandFuncName).Call(input.Assert(Index().Interface())))
 	}
@@ -463,7 +470,7 @@ func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, inp
 			}
 
 			for _, sctx := range slotCtxList {
-				ctx.expandType(sctx.field.Type(), &sctx.localVar, false, sctx.input, sctx.slot)
+				ctx.expandType(sctx.field.Type(), &sctx.localVar, false, sctx.input, sctx.slot, false)
 			}
 
 			g.Id(_idOutput).Op(":=").Do(func(stmt *Statement) {
@@ -477,6 +484,68 @@ func (ctx *Ctx) expandNamedStruct(t *types.Named, varHint *string, ref bool, inp
 			}))
 			g.Return(Id(_idOutput))
 		})
+}
+
+// For named struct inside a slice, we will expand it inline.
+func (ctx *Ctx) expandNamedStructN(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
+	// Cast the element to nested block:
+	//
+	// elem := elem.(map[string]interface{})
+	slot.define.Add(input.Clone().Op(":=").Add(input.Clone().Assert(Map(String()).Interface())))
+
+	// Loop over the struct fields and get their "slots"
+	type slotCtx struct {
+		field    *types.Var
+		slot     expandSlot
+		input    *Statement
+		localVar string
+	}
+
+	var slotCtxList []slotCtx
+
+	var assignSlots []*Statement
+	ut := t.Underlying().(*types.Struct)
+	for i := 0; i < ut.NumFields(); i++ {
+		v := ut.Field(i)
+		if !v.Exported() {
+			continue
+		}
+
+		if ctx.honorJSONIgnore {
+			if reflect.StructTag(ut.Tag(i)).Get("json") == "-" {
+				continue
+			}
+		}
+
+		defineSlot := slot.define
+		assignSlot := &Statement{}
+		assignSlots = append(assignSlots, assignSlot)
+		sctx := slotCtx{
+			field: v,
+			slot: expandSlot{
+				f:      slot.f,
+				define: defineSlot,
+				assign: assignSlot,
+			},
+			input:    input.Clone().Index(Lit(strcase.ToSnake(v.Name()))),
+			localVar: newIdent(strcase.ToLowerCamel(v.Name())),
+		}
+		slotCtxList = append(slotCtxList, sctx)
+	}
+
+	for _, sctx := range slotCtxList {
+		ctx.expandType(sctx.field.Type(), &sctx.localVar, false, sctx.input, sctx.slot, false)
+	}
+
+	slot.assign.Add(Do(func(stmt *Statement) {
+		if ref {
+			stmt.Add(Op("&"))
+		}
+	}).Add(qualifiedNamedType(t)).Values(DictFunc(func(d Dict) {
+		for idx, sctx := range slotCtxList {
+			d[Id(sctx.field.Name())] = assignSlots[idx]
+		}
+	})))
 }
 
 func (ctx *Ctx) expandNamedInterface(t *types.Named, hint *string, ref bool, input *Statement, slot expandSlot) {
@@ -505,7 +574,7 @@ func (ctx *Ctx) expandNamedInterface(t *types.Named, hint *string, ref bool, inp
 			define: nil,
 			assign: nil,
 		}
-		ctx.expandType(implT, hint, ref, input, newSlot)
+		ctx.expandType(implT, hint, ref, input, newSlot, false)
 	}
 
 	slot.f.Func().Id(expandFuncName).Params(
@@ -522,4 +591,3 @@ func (ctx *Ctx) expandNamedInterface(t *types.Named, hint *string, ref bool, inp
 			g.Return(Nil())
 		})
 }
-

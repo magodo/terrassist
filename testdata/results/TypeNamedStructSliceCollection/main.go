@@ -21,16 +21,9 @@ func expandTypeS1Slice(input []interface{}) []types.TypeS1 {
 	}
 	output := make([]types.TypeS1, 0)
 	for _, elem := range input {
-		output = append(output, expandTypeS1(elem.([]interface{})))
+		elem := elem.(map[string]interface{})
+		output = append(output, types.TypeS1{I: elem["i"].(int)})
 	}
-	return output
-}
-func expandTypeS1(input []interface{}) types.TypeS1 {
-	if len(input) == 0 || input[0] == nil {
-		return types.TypeS1{}
-	}
-	b := input[0].(map[string]interface{})
-	output := types.TypeS1{I: b["i"].(int)}
 	return output
 }
 func expandTypeS1SlicePtr(input []interface{}) *[]types.TypeS1 {
@@ -39,7 +32,8 @@ func expandTypeS1SlicePtr(input []interface{}) *[]types.TypeS1 {
 	}
 	output := make([]types.TypeS1, 0)
 	for _, elem := range input {
-		output = append(output, expandTypeS1(elem.([]interface{})))
+		elem := elem.(map[string]interface{})
+		output = append(output, types.TypeS1{I: elem["i"].(int)})
 	}
 	return &output
 }
@@ -49,16 +43,9 @@ func expandTypeS1PtrSlice(input []interface{}) []*types.TypeS1 {
 	}
 	output := make([]*types.TypeS1, 0)
 	for _, elem := range input {
-		output = append(output, expandTypeS1Ptr(elem.([]interface{})))
+		elem := elem.(map[string]interface{})
+		output = append(output, &types.TypeS1{I: elem["i"].(int)})
 	}
-	return output
-}
-func expandTypeS1Ptr(input []interface{}) *types.TypeS1 {
-	if len(input) == 0 || input[0] == nil {
-		return nil
-	}
-	b := input[0].(map[string]interface{})
-	output := &types.TypeS1{I: b["i"].(int)}
 	return output
 }
 func expandTypeS1PtrSlicePtr(input []interface{}) *[]*types.TypeS1 {
@@ -67,7 +54,8 @@ func expandTypeS1PtrSlicePtr(input []interface{}) *[]*types.TypeS1 {
 	}
 	output := make([]*types.TypeS1, 0)
 	for _, elem := range input {
-		output = append(output, expandTypeS1Ptr(elem.([]interface{})))
+		elem := elem.(map[string]interface{})
+		output = append(output, &types.TypeS1{I: elem["i"].(int)})
 	}
 	return &output
 }
@@ -82,12 +70,9 @@ func flattenTypeNamedStructSliceCollection(input types.TypeNamedStructSliceColle
 func flattenTypeS1Slice(input []types.TypeS1) []interface{} {
 	output := make([]interface{}, 0)
 	for _, elem := range input {
-		output = append(output, flattenTypeS1(elem))
+		output = append(output, map[string]interface{}{"i": elem.I})
 	}
 	return output
-}
-func flattenTypeS1(input types.TypeS1) []interface{} {
-	return []interface{}{map[string]interface{}{"i": input.I}}
 }
 func flattenTypeS1SlicePtr(input *[]types.TypeS1) []interface{} {
 	if input == nil {
@@ -95,22 +80,19 @@ func flattenTypeS1SlicePtr(input *[]types.TypeS1) []interface{} {
 	}
 	output := make([]interface{}, 0)
 	for _, elem := range *input {
-		output = append(output, flattenTypeS1(elem))
+		output = append(output, map[string]interface{}{"i": elem.I})
 	}
 	return output
 }
 func flattenTypeS1PtrSlice(input []*types.TypeS1) []interface{} {
 	output := make([]interface{}, 0)
 	for _, elem := range input {
-		output = append(output, flattenTypeS1Ptr(elem))
+		if input == nil {
+			continue
+		}
+		output = append(output, map[string]interface{}{"i": elem.I})
 	}
 	return output
-}
-func flattenTypeS1Ptr(input *types.TypeS1) []interface{} {
-	if input == nil {
-		return []interface{}{}
-	}
-	return []interface{}{map[string]interface{}{"i": input.I}}
 }
 func flattenTypeS1PtrSlicePtr(input *[]*types.TypeS1) []interface{} {
 	if input == nil {
@@ -118,7 +100,10 @@ func flattenTypeS1PtrSlicePtr(input *[]*types.TypeS1) []interface{} {
 	}
 	output := make([]interface{}, 0)
 	for _, elem := range *input {
-		output = append(output, flattenTypeS1Ptr(elem))
+		if input == nil {
+			continue
+		}
+		output = append(output, map[string]interface{}{"i": elem.I})
 	}
 	return output
 }

@@ -22,7 +22,7 @@ var zeroValues = map[types.BasicKind]*Statement{
 	types.Float64: Lit(0.0),
 }
 
-func (ctx *Ctx) flattenType(t types.Type, varHint *string, ref bool, input *Statement, slot flattenSlot) {
+func (ctx *Ctx) flattenType(t types.Type, varHint *string, ref bool, input *Statement, slot flattenSlot, inSlice bool) {
 	switch t := t.(type) {
 	case *types.Basic:
 		if input == nil {
@@ -33,20 +33,20 @@ func (ctx *Ctx) flattenType(t types.Type, varHint *string, ref bool, input *Stat
 		if ref == true {
 			log.Fatalf("Can't flatten pointer to pointer (%v)", t)
 		}
-		ctx.flattenType(t.Elem(), varHint, true, input, slot)
+		ctx.flattenType(t.Elem(), varHint, true, input, slot, inSlice)
 	case *types.Slice:
 		ctx.flattenSlice(t, varHint, ref, input, slot)
 	case *types.Map:
 		ctx.flattenMap(t, varHint, ref, input, slot)
 	case *types.Named:
-		ctx.flattenNamedType(t, varHint, ref, input, slot)
+		ctx.flattenNamedType(t, varHint, ref, input, slot, inSlice)
 	default:
 		// Ignore: Array, Chan, Tuple, Signature, Struct, Interface
 		return
 	}
 }
 
-func (ctx *Ctx) flattenNamedType(t *types.Named, varHint *string, ref bool, input *Statement, slot flattenSlot) {
+func (ctx *Ctx) flattenNamedType(t *types.Named, varHint *string, ref bool, input *Statement, slot flattenSlot, inSlice bool) {
 	switch t.Underlying().(type) {
 	case *types.Basic:
 		if input == nil {
@@ -57,13 +57,13 @@ func (ctx *Ctx) flattenNamedType(t *types.Named, varHint *string, ref bool, inpu
 		if ref == true {
 			log.Fatalf("Can't flatten pointer to pointer (%v)", t)
 		}
-		ctx.flattenNamedPointer(t, varHint, ref, input, slot)
+		ctx.flattenNamedPointer(t, varHint, ref, input, slot, inSlice)
 	case *types.Slice:
 		ctx.flattenNamedSlice(t, varHint, ref, input, slot)
 	case *types.Map:
 		ctx.flattenNamedMap(t, varHint, ref, input, slot)
 	case *types.Struct:
-		ctx.flattenNamedStruct(t, varHint, ref, input, slot)
+		ctx.flattenNamedStruct(t, varHint, ref, input, slot, inSlice)
 	case *types.Interface:
 		ctx.flattenNamedInterface(t, varHint, ref, input, slot)
 	default:
@@ -118,9 +118,9 @@ func (ctx *Ctx) flattenNamedBasic(t *types.Named, hint *string, ref bool, input 
 	)
 }
 
-func (ctx *Ctx) flattenNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot) {
+func (ctx *Ctx) flattenNamedPointer(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot, inSlice bool) {
 	if input == nil {
-		ctx.flattenType(t.Underlying().(*types.Pointer).Elem(), hint, true, nil, slot)
+		ctx.flattenType(t.Underlying().(*types.Pointer).Elem(), hint, true, nil, slot, inSlice)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (ctx *Ctx) flattenNamedPointer(t *types.Named, hint *string, ref bool, inpu
 		define: slot.define,
 		assign: assignSlot,
 	}
-	ctx.flattenType(t.Underlying().(*types.Pointer).Elem(), hint, true, input, newSlot)
+	ctx.flattenType(t.Underlying().(*types.Pointer).Elem(), hint, true, input, newSlot, inSlice)
 	slot.assign.Add(assignSlot)
 }
 
@@ -199,7 +199,7 @@ func (ctx *Ctx) flattenSlice(t *types.Slice, hint *string, ref bool, input *Stat
 					assign: assignSlot,
 					define: ig,
 				}
-				ctx.flattenType(t.Elem(), &localVar, false, Id(_idSliceElem), newSlot)
+				ctx.flattenType(t.Elem(), &localVar, false, Id(_idSliceElem), newSlot, true)
 
 				ig.Add(Id(_idOutput).Op("=").Append(Id(_idOutput), assignSlot))
 			})
@@ -265,7 +265,7 @@ func (ctx *Ctx) flattenNamedSlice(t *types.Named, hint *string, ref bool, input 
 					assign: assignSlot,
 					define: ig,
 				}
-				ctx.flattenType(t.Underlying().(*types.Slice).Elem(), &localVar, false, Id(_idSliceElem), newSlot)
+				ctx.flattenType(t.Underlying().(*types.Slice).Elem(), &localVar, false, Id(_idSliceElem), newSlot, true)
 
 				ig.Add(Id(_idOutput).Op("=").Append(Id(_idOutput), assignSlot))
 			})
@@ -343,7 +343,7 @@ func (ctx *Ctx) flattenMap(t *types.Map, hint *string, ref bool, input *Statemen
 					define: ig,
 				}
 				localVar := _idLocalVar
-				ctx.flattenType(t.Elem(), &localVar, false, Id("v"), newSlot)
+				ctx.flattenType(t.Elem(), &localVar, false, Id("v"), newSlot, false)
 
 				ig.Id(_idOutput).Index(Id("k")).Op("=").Add(assignSlot)
 			})
@@ -410,7 +410,7 @@ func (ctx *Ctx) flattenNamedMap(t *types.Named, hint *string, ref bool, input *S
 					define: ig,
 				}
 				localVar := _idLocalVar
-				ctx.flattenType(ut.Elem(), &localVar, false, Id("v"), newSlot)
+				ctx.flattenType(ut.Elem(), &localVar, false, Id("v"), newSlot, false)
 
 				ig.Id(_idOutput).Index(Id("k")).Op("=").Add(assignSlot)
 			})
@@ -418,13 +418,21 @@ func (ctx *Ctx) flattenNamedMap(t *types.Named, hint *string, ref bool, input *S
 			g.Return(Id(_idOutput))
 		})
 }
-func (ctx *Ctx) flattenNamedStruct(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot) {
+
+func (ctx *Ctx) flattenNamedStruct(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot, inSlice bool) {
+	if inSlice {
+		ctx.flattenNamedStructN(t, hint, ref, input, slot)
+		return
+	}
+	ctx.flattenNamedStruct1(t, hint, ref, input, slot)
+}
+
+func (ctx *Ctx) flattenNamedStruct1(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot) {
 	flattenFuncName := fmt.Sprintf("flatten%s", strcase.ToCamel(t.Obj().Name()))
 	if ref {
 		flattenFuncName += "Ptr"
 	}
 
-	// Fill in the assign slot of the invoker.
 	if slot.assign != nil {
 		slot.assign.Add(Id(flattenFuncName).Call(input))
 	}
@@ -497,7 +505,7 @@ func (ctx *Ctx) flattenNamedStruct(t *types.Named, hint *string, ref bool, input
 			}
 
 			for _, sctx := range slotCtxList {
-				ctx.flattenType(sctx.field.Type(), &sctx.localVar, false, sctx.input, sctx.slot)
+				ctx.flattenType(sctx.field.Type(), &sctx.localVar, false, sctx.input, sctx.slot, false)
 			}
 
 			g.Return(Index().Interface().Values(
@@ -508,6 +516,66 @@ func (ctx *Ctx) flattenNamedStruct(t *types.Named, hint *string, ref bool, input
 				})),
 			))
 		})
+}
+
+// For named struct inside a slice, we will flatten it inline.
+func (ctx *Ctx) flattenNamedStructN(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot) {
+	if ref {
+		// Nil check on the input.
+		slot.define.Add(If(Id(_idInput).Op("==").Nil()).BlockFunc(func(g *Group) {
+			g.Continue()
+		}))
+	}
+
+	// Loop over the struct fields and get their "slots"
+	type slotCtx struct {
+		field    *types.Var
+		slot     flattenSlot
+		input    *Statement
+		localVar string
+	}
+
+	var slotCtxList []slotCtx
+
+	var assignSlots []*Statement
+	ut := t.Underlying().(*types.Struct)
+	for i := 0; i < ut.NumFields(); i++ {
+		v := ut.Field(i)
+		if !v.Exported() {
+			continue
+		}
+
+		if ctx.honorJSONIgnore {
+			if reflect.StructTag(ut.Tag(i)).Get("json") == "-" {
+				continue
+			}
+		}
+
+		defineSlot := slot.define
+		assignSlot := &Statement{}
+		assignSlots = append(assignSlots, assignSlot)
+		sctx := slotCtx{
+			field: v,
+			slot: flattenSlot{
+				f:      slot.f,
+				define: defineSlot,
+				assign: assignSlot,
+			},
+			input:    input.Clone().Dot(v.Name()),
+			localVar: newIdent(strcase.ToLowerCamel(v.Name())),
+		}
+		slotCtxList = append(slotCtxList, sctx)
+	}
+
+	for _, sctx := range slotCtxList {
+		ctx.flattenType(sctx.field.Type(), &sctx.localVar, false, sctx.input, sctx.slot, false)
+	}
+
+	slot.assign.Add(Map(String()).Interface().Values(DictFunc(func(d Dict) {
+		for idx, sctx := range slotCtxList {
+			d[Lit(strcase.ToSnake(sctx.field.Name()))] = assignSlots[idx]
+		}
+	})))
 }
 
 func (ctx *Ctx) flattenNamedInterface(t *types.Named, hint *string, ref bool, input *Statement, slot flattenSlot) {
@@ -534,7 +602,7 @@ func (ctx *Ctx) flattenNamedInterface(t *types.Named, hint *string, ref bool, in
 			define: nil,
 			assign: nil,
 		}
-		ctx.flattenType(implT, hint, ref, input, newSlot)
+		ctx.flattenType(implT, hint, ref, input, newSlot, false)
 	}
 
 	// Create a flatten function for the given type

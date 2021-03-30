@@ -259,4 +259,5 @@ func (s TypeS1) Foo() {}
 func (s *TypeS2) Foo() {}
 
 type TypeNamedInterfaceSlice []TypeNamedInterface
+
 type TypeNamedInterfaceMap map[string]TypeNamedInterface

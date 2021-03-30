@@ -252,8 +252,8 @@ func (ctx *Ctx) findInterfaceImplementers(ut *types.Interface) []types.Type {
 
 func (ctx *Ctx) run() *File {
 	f := NewFile(ctx.thisPkg.Name)
-	ctx.expandType(ctx.t, nil, false, nil, expandSlot{f: f})
-	ctx.flattenType(ctx.t, nil, false, nil, flattenSlot{f: f})
+	ctx.expandType(ctx.t, nil, false, nil, expandSlot{f: f}, false)
+	ctx.flattenType(ctx.t, nil, false, nil, flattenSlot{f: f}, false)
 	return f
 }
 

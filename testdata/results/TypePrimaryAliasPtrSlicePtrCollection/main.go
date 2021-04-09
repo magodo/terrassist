@@ -73,11 +73,11 @@ func flattenBoolPtrSlicePtr(input *[]*types.Bool) []interface{} {
 	}
 	output := make([]interface{}, 0)
 	for _, elem := range *input {
-		var e bool
+		var e types.Bool
 		if elem != nil {
-			e = bool(*elem)
+			e = *elem
 		}
-		output = append(output, e)
+		output = append(output, bool(e))
 	}
 	return output
 }
@@ -87,11 +87,11 @@ func flattenIntPtrSlicePtr(input *[]*types.Int) []interface{} {
 	}
 	output := make([]interface{}, 0)
 	for _, elem := range *input {
-		var e int
+		var e types.Int
 		if elem != nil {
-			e = int(*elem)
+			e = *elem
 		}
-		output = append(output, e)
+		output = append(output, int(e))
 	}
 	return output
 }
@@ -101,11 +101,11 @@ func flattenStrPtrSlicePtr(input *[]*types.Str) []interface{} {
 	}
 	output := make([]interface{}, 0)
 	for _, elem := range *input {
-		var e string
+		var e types.Str
 		if elem != nil {
-			e = string(*elem)
+			e = *elem
 		}
-		output = append(output, e)
+		output = append(output, string(e))
 	}
 	return output
 }
@@ -115,11 +115,11 @@ func flattenFloatPtrSlicePtr(input *[]*types.Float) []interface{} {
 	}
 	output := make([]interface{}, 0)
 	for _, elem := range *input {
-		var e float64
+		var e types.Float
 		if elem != nil {
-			e = float64(*elem)
+			e = *elem
 		}
-		output = append(output, e)
+		output = append(output, float64(e))
 	}
 	return output
 }

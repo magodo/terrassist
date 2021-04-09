@@ -261,3 +261,65 @@ func (s *TypeS2) Foo() {}
 type TypeNamedInterfaceSlice []TypeNamedInterface
 
 type TypeNamedInterfaceMap map[string]TypeNamedInterface
+
+type TypeNonNativePrimaryCollection struct {
+	Int8    int8
+	Int16   int16
+	Int32   int32
+	Int64   int64
+	Uint    uint
+	Uint8   uint8
+	Uint16  uint16
+	Uint32  uint32
+	Uint64  uint64
+	Float32 float32
+}
+
+type TypeNonNativePrimaryPtrCollection struct {
+	PtrInt8    *int8
+	PtrInt16   *int16
+	PtrInt32   *int32
+	PtrInt64   *int64
+	PtrUint    *uint
+	PtrUint8   *uint8
+	PtrUint16  *uint16
+	PtrUint32  *uint32
+	PtrUint64  *uint64
+	PtrFloat32 *float32
+}
+
+type Int8 int8
+type Int16 int16
+type Int32 int32
+type Int64 int64
+
+type Uint8 uint8
+type Uint16 uint16
+type Uint32 uint32
+type Uint64 uint64
+
+type Float32 float32
+
+type TypeNonNativePrimaryAliasCollection struct {
+	Int8
+	Int16
+	Int32
+	Int64
+	Uint8
+	Uint16
+	Uint32
+	Uint64
+	Float32
+}
+
+type TypeNonNativePrimaryAliasPtrCollection struct {
+	PtrInt8    *Int8
+	PtrInt16   *Int16
+	PtrInt32   *Int32
+	PtrInt64   *Int64
+	PtrUint8   *Uint8
+	PtrUint16  *Uint16
+	PtrUint32  *Uint32
+	PtrUint64  *Uint64
+	PtrFloat32 *Float32
+}

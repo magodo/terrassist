@@ -157,12 +157,24 @@ func TestAll(t *testing.T) {
 			expectFolder: "TypeS1_Slice",
 		},
 		{
-			typ: "[]TypePrimaryPtrCollection",
+			typ:          "[]TypePrimaryPtrCollection",
 			expectFolder: "TypePrimaryPtrCollection_Slice",
 		},
 		{
-			typ: "[]TypeNamedStructCollection",
+			typ:          "[]TypeNamedStructCollection",
 			expectFolder: "TypeNamedStructCollection_Slice",
+		},
+		{
+			typ: "TypeNonNativePrimaryCollection",
+		},
+		{
+			typ: "TypeNonNativePrimaryPtrCollection",
+		},
+		{
+			typ: "TypeNonNativePrimaryAliasCollection",
+		},
+		{
+			typ: "TypeNonNativePrimaryAliasPtrCollection",
 		},
 	}
 

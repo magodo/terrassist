@@ -89,72 +89,106 @@ func NewCtx(opts CtxOptions) (*Ctx, error) {
 type basicTypeInfo struct {
 	PtrHelperFunc *Statement // TODO: make this configurable
 	Type          *Statement
+	NativeType    *Statement // Terraform Plugin SDK Native Type
+	IsNative      bool
 }
 
 var basicTypeInfoMap = map[types.BasicKind]basicTypeInfo{
 	types.Bool: {
 		PtrHelperFunc: Qual("types/utils", "Bool"),
 		Type:          Bool(),
+		NativeType:    Bool(),
+		IsNative:      true,
 	},
 	types.Int: {
 		PtrHelperFunc: Qual("types/utils", "Int"),
 		Type:          Int(),
+		NativeType:    Int(),
+		IsNative:      true,
 	},
 	types.Int8: {
 		PtrHelperFunc: Qual("types/utils", "Int8"),
 		Type:          Int8(),
+		NativeType:    Int(),
+		IsNative:      false,
 	},
 	types.Int16: {
 		PtrHelperFunc: Qual("types/utils", "Int16"),
 		Type:          Int16(),
+		NativeType:    Int(),
+		IsNative:      false,
 	},
 	types.Int32: {
 		PtrHelperFunc: Qual("types/utils", "Int32"),
 		Type:          Int32(),
+		NativeType:    Int(),
+		IsNative:      false,
 	},
 	types.Int64: {
 		PtrHelperFunc: Qual("types/utils", "Int64"),
 		Type:          Int64(),
+		NativeType:    Int(),
+		IsNative:      false,
 	},
 	types.Uint: {
 		PtrHelperFunc: Qual("types/utils", "Uint"),
 		Type:          Uint(),
+		NativeType:    Int(),
+		IsNative:      false,
 	},
 	types.Uint8: {
 		PtrHelperFunc: Qual("types/utils", "Uint8"),
 		Type:          Uint8(),
+		NativeType:    Int(),
+		IsNative:      false,
 	},
 	types.Uint16: {
 		PtrHelperFunc: Qual("types/utils", "Uint16"),
 		Type:          Uint16(),
+		NativeType:    Int(),
+		IsNative:      false,
 	},
 	types.Uint32: {
 		PtrHelperFunc: Qual("types/utils", "Uint32"),
 		Type:          Uint32(),
+		NativeType:    Int(),
+		IsNative:      false,
 	},
 	types.Uint64: {
 		PtrHelperFunc: Qual("types/utils", "Uint64"),
 		Type:          Uint64(),
+		NativeType:    Int(),
+		IsNative:      false,
 	},
 	types.Float32: {
 		PtrHelperFunc: Qual("types/utils", "Float32"),
 		Type:          Float32(),
+		NativeType:    Float64(),
+		IsNative:      false,
 	},
 	types.Float64: {
 		PtrHelperFunc: Qual("types/utils", "Float64"),
 		Type:          Float64(),
+		NativeType:    Float64(),
+		IsNative:      true,
 	},
 	types.Complex64: {
 		PtrHelperFunc: Qual("types/utils", "Complex64"),
 		Type:          Complex64(),
+		NativeType:    Comment("Plugin SDK doesn't support complex64"),
+		IsNative:      false,
 	},
 	types.Complex128: {
 		PtrHelperFunc: Qual("types/utils", "Complex128"),
 		Type:          Complex128(),
+		NativeType:    Comment("Plugin SDK doesn't support complex128"),
+		IsNative:      false,
 	},
 	types.String: {
 		PtrHelperFunc: Qual("types/utils", "String"),
 		Type:          String(),
+		NativeType:    String(),
+		IsNative:      true,
 	},
 }
 

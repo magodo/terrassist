@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	. "github.com/dave/jennifer/jen"
-	"github.com/iancoleman/strcase"
 	"go/types"
 	"log"
 	"reflect"
+
+	. "github.com/dave/jennifer/jen"
+	"github.com/iancoleman/strcase"
 )
 
 type flattenSlot struct {
@@ -72,9 +73,16 @@ func (ctx *Ctx) flattenNamedType(t *types.Named, varHint *string, ref bool, inpu
 	}
 }
 
+func nativeBasicAssignee(t *types.Basic, input *Statement) *Statement {
+	if basicTypeInfoMap[t.Kind()].IsNative {
+		return input
+	}
+	return basicTypeInfoMap[t.Kind()].NativeType.Clone().Call(input)
+}
+
 func (ctx *Ctx) flattenBasic(t *types.Basic, hint *string, ref bool, input *Statement, slot flattenSlot) {
 	if !ref {
-		slot.assign.Add(input)
+		slot.assign.Add(nativeBasicAssignee(t, input))
 		return
 	}
 
@@ -83,7 +91,8 @@ func (ctx *Ctx) flattenBasic(t *types.Basic, hint *string, ref bool, input *Stat
 		localVar = *hint
 	}
 
-	slot.assign.Add(Id(localVar))
+	slot.assign.Add(nativeBasicAssignee(t, Id(localVar)))
+
 	slot.define.Add(
 		Var().Id(localVar).Add(basicTypeInfoMap[t.Kind()].Type.Clone()),
 	)
@@ -98,7 +107,7 @@ func (ctx *Ctx) flattenNamedBasic(t *types.Named, hint *string, ref bool, input 
 	ut := t.Underlying().(*types.Basic)
 
 	if !ref {
-		slot.assign.Add(basicTypeInfoMap[ut.Kind()].Type.Clone().Call(input))
+		slot.assign.Add(basicTypeInfoMap[ut.Kind()].NativeType.Clone().Call(input))
 		return
 	}
 
@@ -107,13 +116,14 @@ func (ctx *Ctx) flattenNamedBasic(t *types.Named, hint *string, ref bool, input 
 		localVar = *hint
 	}
 
-	slot.assign.Add(Id(localVar))
+	slot.assign.Add(basicTypeInfoMap[t.Underlying().(*types.Basic).Kind()].NativeType.Clone().Call(Id(localVar)))
+
 	slot.define.Add(
-		Var().Id(localVar).Add(basicTypeInfoMap[ut.Kind()].Type.Clone()),
+		Var().Id(localVar).Add(qualifiedNamedType(t)),
 	)
 	slot.define.Add(
 		If(input.Clone().Op("!=").Nil()).Block(
-			Id(localVar).Op("=").Add(basicTypeInfoMap[ut.Kind()].Type.Clone().Call(Op("*").Add(input))),
+			Id(localVar).Op("=").Add(Op("*").Add(input)),
 		),
 	)
 }

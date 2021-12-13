@@ -8,15 +8,15 @@ func expandTypeNonNativePrimaryAliasCollection(input []interface{}) types.TypeNo
 	}
 	b := input[0].(map[string]interface{})
 	output := types.TypeNonNativePrimaryAliasCollection{
-		Float32: types.Float32(b["float_32"].(float32)),
-		Int16:   types.Int16(b["int_16"].(int16)),
-		Int32:   types.Int32(b["int_32"].(int32)),
-		Int64:   types.Int64(b["int_64"].(int64)),
-		Int8:    types.Int8(b["int_8"].(int8)),
-		Uint16:  types.Uint16(b["uint_16"].(uint16)),
-		Uint32:  types.Uint32(b["uint_32"].(uint32)),
-		Uint64:  types.Uint64(b["uint_64"].(uint64)),
-		Uint8:   types.Uint8(b["uint_8"].(uint8)),
+		Float32: types.Float32(b["float_32"].(float64)),
+		Int16:   types.Int16(b["int_16"].(int)),
+		Int32:   types.Int32(b["int_32"].(int)),
+		Int64:   types.Int64(b["int_64"].(int)),
+		Int8:    types.Int8(b["int_8"].(int)),
+		Uint16:  types.Uint16(b["uint_16"].(int)),
+		Uint32:  types.Uint32(b["uint_32"].(int)),
+		Uint64:  types.Uint64(b["uint_64"].(int)),
+		Uint8:   types.Uint8(b["uint_8"].(int)),
 	}
 	return output
 }

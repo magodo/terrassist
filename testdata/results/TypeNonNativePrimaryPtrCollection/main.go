@@ -11,16 +11,16 @@ func expandTypeNonNativePrimaryPtrCollection(input []interface{}) types.TypeNonN
 	}
 	b := input[0].(map[string]interface{})
 	output := types.TypeNonNativePrimaryPtrCollection{
-		PtrFloat32: utils.Float32(b["ptr_float_32"].(float32)),
-		PtrInt16:   utils.Int16(b["ptr_int_16"].(int16)),
-		PtrInt32:   utils.Int32(b["ptr_int_32"].(int32)),
-		PtrInt64:   utils.Int64(b["ptr_int_64"].(int64)),
-		PtrInt8:    utils.Int8(b["ptr_int_8"].(int8)),
-		PtrUint:    utils.Uint(b["ptr_uint"].(uint)),
-		PtrUint16:  utils.Uint16(b["ptr_uint_16"].(uint16)),
-		PtrUint32:  utils.Uint32(b["ptr_uint_32"].(uint32)),
-		PtrUint64:  utils.Uint64(b["ptr_uint_64"].(uint64)),
-		PtrUint8:   utils.Uint8(b["ptr_uint_8"].(uint8)),
+		PtrFloat32: utils.Float32(float32(b["ptr_float_32"].(float64))),
+		PtrInt16:   utils.Int16(int16(b["ptr_int_16"].(int))),
+		PtrInt32:   utils.Int32(int32(b["ptr_int_32"].(int))),
+		PtrInt64:   utils.Int64(int64(b["ptr_int_64"].(int))),
+		PtrInt8:    utils.Int8(int8(b["ptr_int_8"].(int))),
+		PtrUint:    utils.Uint(uint(b["ptr_uint"].(int))),
+		PtrUint16:  utils.Uint16(uint16(b["ptr_uint_16"].(int))),
+		PtrUint32:  utils.Uint32(uint32(b["ptr_uint_32"].(int))),
+		PtrUint64:  utils.Uint64(uint64(b["ptr_uint_64"].(int))),
+		PtrUint8:   utils.Uint8(uint8(b["ptr_uint_8"].(int))),
 	}
 	return output
 }

@@ -8,16 +8,16 @@ func expandTypeNonNativePrimaryCollection(input []interface{}) types.TypeNonNati
 	}
 	b := input[0].(map[string]interface{})
 	output := types.TypeNonNativePrimaryCollection{
-		Float32: b["float_32"].(float32),
-		Int16:   b["int_16"].(int16),
-		Int32:   b["int_32"].(int32),
-		Int64:   b["int_64"].(int64),
-		Int8:    b["int_8"].(int8),
-		Uint:    b["uint"].(uint),
-		Uint16:  b["uint_16"].(uint16),
-		Uint32:  b["uint_32"].(uint32),
-		Uint64:  b["uint_64"].(uint64),
-		Uint8:   b["uint_8"].(uint8),
+		Float32: float32(b["float_32"].(float64)),
+		Int16:   int16(b["int_16"].(int)),
+		Int32:   int32(b["int_32"].(int)),
+		Int64:   int64(b["int_64"].(int)),
+		Int8:    int8(b["int_8"].(int)),
+		Uint:    uint(b["uint"].(int)),
+		Uint16:  uint16(b["uint_16"].(int)),
+		Uint32:  uint32(b["uint_32"].(int)),
+		Uint64:  uint64(b["uint_64"].(int)),
+		Uint8:   uint8(b["uint_8"].(int)),
 	}
 	return output
 }

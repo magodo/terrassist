@@ -66,7 +66,11 @@ func (ctx *Ctx) expandNamedType(t *types.Named, varHint *string, ref bool, input
 }
 
 func (ctx *Ctx) expandBasic(t *types.Basic, varHint *string, ref bool, input *Statement, slot expandSlot) {
-	cs := input.Assert(Id(t.Name()))
+	typeInfo := basicTypeInfoMap[t.Kind()]
+	cs := input.Assert(typeInfo.NativeType)
+	if !typeInfo.IsNative {
+		cs = typeInfo.Type.Clone().Call(cs)
+	}
 	if ref {
 		cs = basicTypeInfoMap[t.Kind()].PtrHelperFunc.Clone().Call(cs)
 	}
@@ -74,7 +78,8 @@ func (ctx *Ctx) expandBasic(t *types.Basic, varHint *string, ref bool, input *St
 }
 
 func (ctx *Ctx) expandNamedBasic(t *types.Named, varHint *string, ref bool, input *Statement, slot expandSlot) {
-	cs := qualifiedNamedType(t).Call(input.Assert(basicTypeInfoMap[t.Underlying().(*types.Basic).Kind()].Type))
+	typeInfo := basicTypeInfoMap[t.Underlying().(*types.Basic).Kind()]
+	cs := qualifiedNamedType(t).Call(input.Assert(typeInfo.NativeType))
 	if !ref {
 		slot.assign.Add(cs)
 		return
